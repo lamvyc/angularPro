@@ -16,7 +16,7 @@
 | M5 | 开方、审方、驳回重提、幂等提交、状态机 | 计划中 |
 | M6 | 批次库存、FEFO 预占、发药退药、补偿与对账 | 计划中 |
 
-设计文档： [需求](docs/requirements.md) · [架构](docs/architecture.md) · [数据库](docs/database-design.md) · [业务流程](docs/business-flows.md) · [开发计划](docs/development-plan.md) · [M1 实现说明](docs/modules/m1-iam.md) · [M2 实现说明](docs/modules/m2-appointment.md) · [M3 实现说明](docs/modules/m3-workstation.md) · [M4 实现说明](docs/modules/m4-emr.md) · [M5 实现说明](docs/modules/m5-prescription.md) · [M6 实现说明](docs/modules/m6-pharmacy.md)
+设计文档： [需求](docs/requirements.md) · [架构](docs/architecture.md) · [数据库](docs/database-design.md) · [业务流程](docs/business-flows.md) · [开发计划](docs/development-plan.md) · [M1 实现说明](docs/modules/m1-iam.md) · [M2 实现说明](docs/modules/m2-appointment.md) · [M3 实现说明](docs/modules/m3-workstation.md) · [M4 实现说明](docs/modules/m4-emr.md) · [M5 实现说明](docs/modules/m5-prescription.md) · [M6 实现说明](docs/modules/m6-pharmacy.md) · [演示数据指南](docs/demo-data.md)
 
 ## 技术栈（已锁定版本）
 
@@ -155,9 +155,12 @@ cd backend && ./mvnw verify
 
 ## 演示数据与合规
 
-- 种子数据将使用合成姓名、手机号与证件号；证件号仅存哈希与掩码。
+- 本地/Compose 启动时自动加载 [演示数据指南](docs/demo-data.md)：6 名患者、3 个排班、6 个预约、4 个就诊、2 份病历、5 张处方及 3 种药品库存，覆盖候诊/接诊/审方/发药/退药。
+- 演示数据仅在 `local` / `docker` profile 加载，测试与生产不加载；日期以首次启动当天为基准。
+- 种子数据使用合成姓名、手机号与证件号；证件号仅存掩码。
 - 代码与文档中不包含真实患者信息、真实药品处方建议或临床决策逻辑。
 - 登录页与工作台均标注"演示环境 · 合成数据"。
+- 每次演示前可执行 `docker compose -f infra/docker-compose.yml down -v` 重置数据卷，详见演示数据指南。
 
 ## 已知环境说明
 

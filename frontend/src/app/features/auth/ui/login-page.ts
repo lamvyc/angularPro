@@ -48,8 +48,8 @@ export class LoginPage {
 
   protected readonly demoAccounts: readonly DemoAccount[] = [
     { label: '管理员', username: 'admin' },
-    { label: '医生', username: 'doctor1' },
-    { label: '护士', username: 'nurse1' },
+    { label: '医生', username: 'doctor2' },
+    { label: '护士', username: 'nurse3' },
     { label: '药师', username: 'pharmacist1' },
     { label: '收费员', username: 'cashier1' },
   ];

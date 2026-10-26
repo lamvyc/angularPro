@@ -14,7 +14,7 @@ class Blank {}
 
 const PROFILE: UserProfile = {
   id: 2,
-  username: 'doctor1',
+  username: 'doctor2',
   realName: '张明',
   deptId: 1,
   deptName: '皮肤科',
@@ -78,7 +78,7 @@ describe('LoginPage', () => {
     submit?.click();
     await fixture.whenStable();
 
-    expect(login).toHaveBeenCalledWith({ username: 'doctor1', password: 'Medflow@2026' });
+    expect(login).toHaveBeenCalledWith({ username: 'doctor2', password: 'Medflow@2026' });
     expect(navigate).toHaveBeenCalledWith('/dashboard');
   });
 });
