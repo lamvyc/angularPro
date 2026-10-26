@@ -43,7 +43,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusiness(BusinessException ex, HttpServletRequest request) {
         log.debug("business error code={} path={}", ex.errorCode().code(), request.getRequestURI());
-        return problemDetailsFactory.create(ex.errorCode(), request, ex.getMessage());
+        ProblemDetail problem = problemDetailsFactory.create(ex.errorCode(), request, ex.getMessage());
+        return ex.fieldErrors().isEmpty() ? problem
+                : problemDetailsFactory.withFieldErrors(problem, ex.fieldErrors());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

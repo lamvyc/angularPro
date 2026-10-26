@@ -24,9 +24,41 @@ public interface EncounterRepository {
 
     Optional<EmrRecordRow> findEmr(long encounterId);
 
-    long insertEmr(long encounterId, long patientId, long doctorId, String recordNo, String contentJson);
+    long insertEmr(long encounterId, long patientId, long doctorId, String recordNo, String contentJson,
+            long templateId, long templateVersionId);
 
     int updateEmr(long id, String contentJson, int version);
+
+    int signEmr(long id, int version, String contentJson, String hash, long signerId, Instant at);
+
+    int amendEmr(long id, int version, String contentJson, String hash, long signerId, Instant at,
+            String reason);
+
+    void supersedeVersions(long recordId);
+
+    long insertVersion(long recordId, int versionNo, String contentJson, String hash, String status,
+            Long authorId, Long signedBy, Instant signedAt, String changeReason);
+
+    List<EmrVersionRow> listVersions(long recordId);
+
+    Optional<EmrVersionRow> findVersion(long recordId, int versionNo);
+
+    Optional<EmrTemplateRow> findTemplateForDept(long deptId);
+
+    Optional<EmrTemplateRow> findTemplate(long id);
+
+    List<EmrTemplateRow> listCurrentTemplates();
+
+    List<EmrTemplateRow> listTemplateVersions(long templateId);
+
+    long insertTemplate(String code, String name, String scopeType, Long deptId, long operatorId);
+
+    long insertTemplateVersion(long templateId, int versionNo, String schemaJson, String changelog,
+            long operatorId, Instant at);
+
+    void setTemplateCurrentVersion(long templateId, long versionId, long operatorId);
+
+    void archiveTemplate(long templateId, long operatorId);
 
     void deleteDiagnoses(long encounterId);
 

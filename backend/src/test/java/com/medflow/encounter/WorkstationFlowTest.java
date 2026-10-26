@@ -67,6 +67,13 @@ class WorkstationFlowTest extends AbstractIntegrationTest {
         assertThat(stale.status()).isEqualTo(409);
         assertThat(stale.body().path("code").asString()).isEqualTo("MED-STATE-002");
 
+        var signed = api.post("/api/v1/encounters/" + fixture.encounterId() + "/emr/sign",
+                Map.of("content", Map.of("chiefComplaint", "发热三天", "presentIllness", "受凉后发热",
+                        "physicalExam", "体温 38.5℃"), "version", 1), doctorToken);
+        assertThat(signed.status()).isEqualTo(200);
+        assertThat(signed.text("status")).isEqualTo("SIGNED");
+        assertThat(signed.body().path("signatureHash").asString()).hasSize(64);
+
         var noDiagnosis = api.post("/api/v1/encounters/" + fixture.encounterId() + "/finish", null, doctorToken);
         assertThat(noDiagnosis.status()).isEqualTo(409);
 
@@ -95,13 +102,10 @@ class WorkstationFlowTest extends AbstractIntegrationTest {
     void should_reject_finish_without_chief_complaint() {
         EncounterFixture fixture = createEncounter("缺主诉患者");
         api.post("/api/v1/encounters/" + fixture.encounterId() + "/start", null, doctorToken);
-        api.put("/api/v1/encounters/" + fixture.encounterId() + "/diagnoses",
-                Map.of("diagnoses", List.of(Map.of(
-                        "code", "J06.9", "name", "急性上呼吸道感染", "type", "PRIMARY"))), doctorToken);
-
-        var finished = api.post("/api/v1/encounters/" + fixture.encounterId() + "/finish", null, doctorToken);
-        assertThat(finished.status()).isEqualTo(409);
-        assertThat(finished.body().path("detail").asString()).contains("主诉");
+        var sign = api.post("/api/v1/encounters/" + fixture.encounterId() + "/emr/sign",
+                Map.of("content", Map.of("chiefComplaint", ""), "version", 0), doctorToken);
+        assertThat(sign.status()).isEqualTo(422);
+        assertThat(sign.rawBody()).contains("chiefComplaint");
     }
 
     @Test

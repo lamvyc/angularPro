@@ -108,34 +108,150 @@
 
         @if (detail.encounter.status === 'IN_PROGRESS') {
           <div class="emr-head">
-            <span class="block-label">电子病历草稿 · v{{ detail.emr?.version ?? 0 }}</span>
+            <span class="block-label">
+              电子病历 · {{ detail.emr?.templateName ?? '未加载模板' }} · v{{ detail.emr?.version ?? 0 }}
+            </span>
             <span class="muted">
               @if (store.saving()) {
                 保存中…
               } @else if (store.lastSavedAt(); as savedAt) {
-                已保存 {{ savedAt }}
+                {{ savedAt }}
+              } @else if (store.signed()) {
+                已签署
               } @else {
                 修改后 2 秒自动保存
               }
             </span>
           </div>
-          <div class="emr-grid">
-            @for (field of fields; track field.key) {
-              <label class="emr-field" [class.full]="field.key === 'presentIllness' || field.key === 'treatmentPlan'">
-                <span>{{ field.label }}</span>
-                <textarea
-                  rows="2"
-                  [placeholder]="field.placeholder"
-                  [value]="store.content()[field.key]"
-                  (input)="store.updateField(field.key, $event)"
-                ></textarea>
-              </label>
+
+          @if (detail.emr; as emr) {
+            @if (emr.status !== 'DRAFT') {
+              <div class="signed-box">
+                <app-icon name="shield" [size]="15" />
+                {{ emr.status === 'AMENDED' ? '已修订' : '已签署' }} ·
+                {{ emr.signedAt }} · 哈希 {{ emr.signatureHash?.slice(0, 16) }}…
+                @if (emr.amendReason) {
+                  <span> · 原因：{{ emr.amendReason }}</span>
+                }
+              </div>
             }
-          </div>
+
+            @for (section of sections(); track section.key) {
+              <div class="emr-section">
+                <h3>{{ section.title }}</h3>
+                <div class="emr-grid">
+                  @for (field of section.fields; track field.key) {
+                    @if (visible(field)) {
+                      <div class="emr-field" [class.full]="field.type === 'textarea' || field.type === 'checkbox'">
+                        <span>
+                          {{ field.label }}
+                          @if (required(field)) { <em>*</em> }
+                          @if (field.unit) { <small>({{ field.unit }})</small> }
+                        </span>
+
+                        @switch (field.type) {
+                          @case ('textarea') {
+                            <textarea
+                              rows="2"
+                              [disabled]="!store.editable()"
+                              [value]="textValue(field)"
+                              (input)="onText(field, $event)"
+                            ></textarea>
+                          }
+                          @case ('number') {
+                            <input
+                              type="number"
+                              [disabled]="!store.editable()"
+                              [value]="textValue(field)"
+                              (input)="onText(field, $event)"
+                            />
+                          }
+                          @case ('date') {
+                            <input
+                              type="date"
+                              [disabled]="!store.editable()"
+                              [value]="textValue(field)"
+                              (input)="onText(field, $event)"
+                            />
+                          }
+                          @case ('boolean') {
+                            <span class="check-line">
+                              <input
+                                type="checkbox"
+                                [disabled]="!store.editable()"
+                                [checked]="boolValue(field)"
+                                (change)="onBoolean(field, $event)"
+                              />
+                              是
+                            </span>
+                          }
+                          @case ('select') {
+                            <select [disabled]="!store.editable()" (change)="onText(field, $event)">
+                              <option value="">请选择</option>
+                              @for (option of options(field); track option.value) {
+                                <option [value]="option.value" [selected]="textValue(field) === option.value">
+                                  {{ option.label }}
+                                </option>
+                              }
+                            </select>
+                          }
+                          @case ('radio') {
+                            <span class="option-line">
+                              @for (option of options(field); track option.value) {
+                                <label>
+                                  <input
+                                    type="radio"
+                                    [name]="field.key"
+                                    [value]="option.value"
+                                    [disabled]="!store.editable()"
+                                    [checked]="textValue(field) === option.value"
+                                    (change)="onText(field, $event)"
+                                  />
+                                  {{ option.label }}
+                                </label>
+                              }
+                            </span>
+                          }
+                          @case ('checkbox') {
+                            <span class="option-line">
+                              @for (option of options(field); track option.value) {
+                                <label>
+                                  <input
+                                    type="checkbox"
+                                    [disabled]="!store.editable()"
+                                    [checked]="multiChecked(field, option.value)"
+                                    (change)="onMulti(field, option.value, $event)"
+                                  />
+                                  {{ option.label }}
+                                </label>
+                              }
+                            </span>
+                          }
+                          @default {
+                            <input
+                              type="text"
+                              [disabled]="!store.editable()"
+                              [value]="textValue(field)"
+                              (input)="onText(field, $event)"
+                            />
+                          }
+                        }
+                        @if (fieldError(field); as error) {
+                          <small class="field-error">{{ error }}</small>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+            }
+          }
 
           <div class="diagnosis-head">
             <span class="block-label">诊断（必须一条主诊断）</span>
-            <button mat-button type="button" (click)="store.addDiagnosis()">添加诊断</button>
+            <button mat-button type="button" (click)="store.addDiagnosis()" [disabled]="!store.editable()">
+              添加诊断
+            </button>
           </div>
           <div class="diagnosis-list">
             @for (diagnosis of store.diagnoses(); track diagnosis.key; let i = $index) {
@@ -147,7 +263,7 @@
                   <option value="SECONDARY">次诊断</option>
                 </select>
                 <input placeholder="备注" [value]="diagnosis.note" (input)="store.updateDiagnosis(i, 'note', $event)" />
-                <button mat-button type="button" (click)="store.removeDiagnosis(i)">删除</button>
+                <button mat-button type="button" (click)="store.removeDiagnosis(i)" [disabled]="!store.editable()">删除</button>
               </div>
             } @empty {
               <p class="muted">尚未录入诊断</p>
@@ -155,26 +271,49 @@
           </div>
 
           <div class="actions">
-            <button mat-stroked-button type="button" (click)="store.saveDiagnoses()" [disabled]="store.saving()">
-              保存诊断
-            </button>
-            <button mat-button type="button" (click)="store.saveNow()" [disabled]="store.saving()">
-              保存病历
-            </button>
-            <button mat-button type="button" (click)="openCancel()">取消就诊</button>
-            <button
-              *appHasPermission="'encounter:finish'"
-              mat-flat-button
-              type="button"
-              class="finish"
-              (click)="store.finish()"
-              [disabled]="store.saving() || !store.canFinish()"
-            >
-              结束就诊
-            </button>
+            @if (!store.signed()) {
+              <button mat-button type="button" (click)="store.saveNow()" [disabled]="store.saving()">
+                保存草稿
+              </button>
+              <button mat-button type="button" (click)="openCancel()">取消就诊</button>
+              <button
+                *appHasPermission="'emr:sign'"
+                mat-flat-button
+                type="button"
+                (click)="store.sign()"
+                [disabled]="store.saving()"
+              >
+                签署病历
+              </button>
+            } @else {
+              <button mat-button type="button" (click)="openHistory()">版本历史</button>
+              <button mat-button type="button" (click)="print()">打印</button>
+              @if (!store.amending()) {
+                <button *appHasPermission="'emr:revise'" mat-button type="button" (click)="openAmend()">
+                  修订病历
+                </button>
+              } @else {
+                <button mat-button type="button" (click)="store.cancelAmend()">取消修订</button>
+                <button mat-flat-button type="button" (click)="store.submitAmend()" [disabled]="store.saving()">
+                  提交修订
+                </button>
+              }
+              <button
+                *appHasPermission="'encounter:finish'"
+                mat-flat-button
+                type="button"
+                class="finish"
+                (click)="store.finish()"
+                [disabled]="store.saving() || !store.canFinish()"
+              >
+                结束就诊
+              </button>
+            }
           </div>
-          @if (!store.canFinish()) {
-            <p class="finish-hint">结束就诊前需要填写主诉，并保存一条主诊断。</p>
+          @if (!store.signed()) {
+            <p class="finish-hint">签署后才能结束就诊；结束前需保存一条主诊断。</p>
+          } @else if (!store.canFinish() && !store.amending()) {
+            <p class="finish-hint">结束就诊前需要保存一条主诊断。</p>
           }
         } @else if (detail.encounter.status === 'COMPLETED') {
           <div class="completed-box">

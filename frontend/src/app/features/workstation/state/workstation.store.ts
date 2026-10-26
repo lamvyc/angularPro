@@ -4,18 +4,12 @@ import { finalize, of, switchMap, type Observable } from 'rxjs';
 
 import { toMedflowError, type MedflowError } from '../../../core/http/problem-detail';
 import { WorkstationApi } from '../data/workstation.api';
-import type { DiagnosisInput, EncounterDetail, EncounterRow } from '../data/workstation.models';
-
-const EMR_FIELDS = [
-  'chiefComplaint',
-  'presentIllness',
-  'pastHistory',
-  'physicalExam',
-  'auxiliaryExam',
-  'treatmentPlan',
-] as const;
-
-export type EmrField = (typeof EMR_FIELDS)[number];
+import type {
+  DiagnosisInput,
+  EmrVersionView,
+  EncounterDetail,
+  EncounterRow,
+} from '../data/workstation.models';
 
 export interface EditableDiagnosis {
   readonly key: number;
@@ -38,8 +32,9 @@ export class WorkstationStore {
   readonly queue = signal<readonly EncounterRow[]>([]);
   readonly detail = signal<EncounterDetail | null>(null);
   readonly selectedId = signal<number | null>(null);
-  readonly content = signal<Record<string, string>>(this.emptyContent());
+  readonly content = signal<Record<string, unknown>>({});
   readonly diagnoses = signal<readonly EditableDiagnosis[]>([]);
+  readonly versions = signal<readonly EmrVersionView[]>([]);
   readonly loadingQueue = signal(false);
   readonly loadingDetail = signal(false);
   readonly saving = signal(false);
@@ -48,18 +43,24 @@ export class WorkstationStore {
   readonly conflict = signal(false);
   readonly draftAvailable = signal(false);
   readonly lastSavedAt = signal<string | null>(null);
+  readonly amending = signal(false);
+  private amendReason = '';
   private diagnosesDirty = false;
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private diagnosisKey = 0;
 
   readonly selectedEncounter = computed(() => this.detail()?.encounter ?? null);
+  readonly signed = computed(() => {
+    const status = this.detail()?.emr?.status;
+    return status === 'SIGNED' || status === 'AMENDED';
+  });
+  readonly editable = computed(() => !this.signed() || this.amending());
   readonly canFinish = computed(() => {
-    const content = this.content();
+    if (this.detail()?.encounter.status !== 'IN_PROGRESS' || !this.signed() || this.amending()) {
+      return false;
+    }
     const diagnoses = this.diagnoses();
-    return (
-      (content['chiefComplaint'] ?? '').trim().length > 0 &&
-      diagnoses.filter((item) => item.type === 'PRIMARY').length === 1
-    );
+    return diagnoses.filter((item) => item.type === 'PRIMARY').length === 1;
   });
 
   constructor() {
@@ -85,6 +86,7 @@ export class WorkstationStore {
     this.loadingDetail.set(true);
     this.error.set(null);
     this.conflict.set(false);
+    this.amending.set(false);
     this.api
       .detail(encounterId)
       .pipe(
@@ -119,10 +121,14 @@ export class WorkstationStore {
       });
   }
 
-  updateField(field: EmrField, event: Event): void {
-    const value = (event.target as HTMLTextAreaElement | HTMLInputElement).value;
+  updateField(field: string, value: unknown): void {
+    if (!this.editable()) {
+      return;
+    }
     this.content.update((content) => ({ ...content, [field]: value }));
-    this.scheduleSave();
+    if (!this.signed()) {
+      this.scheduleSave();
+    }
   }
 
   updateDiagnosis(index: number, field: keyof EditableDiagnosis, event: Event): void {
@@ -157,10 +163,9 @@ export class WorkstationStore {
     if (id === null) {
       return;
     }
-    const inputs = this.toDiagnosisInputs();
     this.saving.set(true);
     this.api
-      .saveDiagnoses(id, inputs)
+      .saveDiagnoses(id, this.toDiagnosisInputs())
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.saving.set(false)),
@@ -187,7 +192,7 @@ export class WorkstationStore {
     this.cancelTimer();
     const id = this.selectedId();
     const detail = this.detail();
-    if (id === null || detail?.emr == null || this.saving()) {
+    if (id === null || detail?.emr == null || this.saving() || this.signed()) {
       return;
     }
     this.saving.set(true);
@@ -203,36 +208,105 @@ export class WorkstationStore {
           this.lastSavedAt.set(new Date().toLocaleTimeString('zh-CN', { hour12: false }));
           this.conflict.set(false);
           if (manual) {
-            this.message.set('病历已保存');
+            this.message.set('病历草稿已保存');
           }
         },
         error: (error: unknown) => this.handleError(error),
       });
   }
 
-  finish(): void {
+  sign(): void {
     const id = this.selectedId();
-    if (id === null || this.saving()) {
+    const emr = this.detail()?.emr;
+    if (id === null || emr == null || this.saving() || this.signed()) {
       return;
     }
     this.cancelTimer();
+    this.saving.set(true);
+    this.api
+      .sign(id, this.content(), emr.version)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.saving.set(false)),
+      )
+      .subscribe({
+        next: (signed) => {
+          this.detail.update((current) => (current ? { ...current, emr: signed } : current));
+          this.content.set({ ...signed.content });
+          this.lastSavedAt.set(new Date().toLocaleTimeString('zh-CN', { hour12: false }));
+          this.message.set('病历已签署，内容不可直接修改');
+        },
+        error: (error: unknown) => this.handleError(error),
+      });
+  }
+
+  beginAmend(reason: string): void {
+    this.amendReason = reason;
+    this.amending.set(true);
+    this.message.set('修订模式：修改完成后提交修订，将生成新版本');
+  }
+
+  cancelAmend(): void {
+    this.amending.set(false);
+    this.amendReason = '';
     const detail = this.detail();
-    const emr = detail?.emr ?? null;
-    if (emr === null) {
-      this.error.set(null);
-      this.message.set('病历尚未创建，请先开始接诊');
+    if (detail?.emr) {
+      this.content.set({ ...detail.emr.content });
+    }
+  }
+
+  submitAmend(): void {
+    const id = this.selectedId();
+    const emr = this.detail()?.emr;
+    if (id === null || emr == null || this.saving() || !this.amending()) {
       return;
     }
     this.saving.set(true);
-    const save$: Observable<unknown> = this.api.saveEmr(id, this.content(), emr.version);
-    const finish$: Observable<EncounterDetail> = this.api.finish(id);
+    this.api
+      .amend(id, this.content(), emr.version, this.amendReason)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.saving.set(false)),
+      )
+      .subscribe({
+        next: (amended) => {
+          this.detail.update((current) => (current ? { ...current, emr: amended } : current));
+          this.content.set({ ...amended.content });
+          this.amending.set(false);
+          this.message.set('修订已签署，旧版本已置为 SUPERSEDED');
+          this.loadVersions();
+        },
+        error: (error: unknown) => this.handleError(error),
+      });
+  }
+
+  loadVersions(): void {
+    const id = this.selectedId();
+    if (id === null) {
+      return;
+    }
+    this.api
+      .versions(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (versions) => this.versions.set(versions),
+        error: (error: unknown) => this.error.set(toMedflowError(error)),
+      });
+  }
+
+  finish(): void {
+    const id = this.selectedId();
+    if (id === null || this.saving() || !this.canFinish()) {
+      return;
+    }
+    this.cancelTimer();
     const source$: Observable<unknown> = this.diagnosesDirty
       ? this.api.saveDiagnoses(id, this.toDiagnosisInputs())
       : of(null);
+    this.saving.set(true);
     source$
       .pipe(
-        switchMap(() => save$),
-        switchMap(() => finish$),
+        switchMap(() => this.api.finish(id)),
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.saving.set(false)),
       )
@@ -269,7 +343,7 @@ export class WorkstationStore {
     if (!draft) {
       return;
     }
-    this.content.set(this.toStringContent(draft.content));
+    this.content.set({ ...draft.content });
     this.lastSavedAt.set('来自 Redis 草稿');
     this.draftAvailable.set(false);
   }
@@ -284,6 +358,10 @@ export class WorkstationStore {
   clearNotice(): void {
     this.error.set(null);
     this.message.set(null);
+  }
+
+  fieldError(field: string): string | null {
+    return this.error()?.fieldErrors.find((item) => item.field === `content.${field}`)?.message ?? null;
   }
 
   private scheduleSave(): void {
@@ -302,8 +380,7 @@ export class WorkstationStore {
     this.detail.set(detail);
     this.conflict.set(false);
     this.lastSavedAt.set(null);
-    const content = detail.emr ? this.toStringContent(detail.emr.content) : this.emptyContent();
-    this.content.set(content);
+    this.content.set(detail.emr ? { ...detail.emr.content } : {});
     this.diagnoses.set(
       detail.diagnoses.map((item) => ({
         key: ++this.diagnosisKey,
@@ -328,21 +405,11 @@ export class WorkstationStore {
     }));
   }
 
-  private emptyContent(): Record<string, string> {
-    return Object.fromEntries(EMR_FIELDS.map((field) => [field, '']));
-  }
-
-  private toStringContent(content: Readonly<Record<string, unknown>>): Record<string, string> {
-    return Object.fromEntries(
-      EMR_FIELDS.map((field) => [field, content[field] == null ? '' : String(content[field])]),
-    );
-  }
-
   private handleError(error: unknown): void {
     const normalized = toMedflowError(error);
     if (normalized.code === 'MED-STATE-002') {
       this.conflict.set(true);
-      this.message.set('有病历更新冲突：服务器版本已变化，请重新加载后合并。');
+      this.message.set('病历已被其他窗口更新，请重新加载后再合并。');
       return;
     }
     this.error.set(normalized);

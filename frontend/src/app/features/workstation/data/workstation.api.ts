@@ -6,6 +6,7 @@ import type {
   DiagnosisInput,
   DiagnosisView,
   EmrView,
+  EmrVersionView,
   EncounterDetail,
   EncounterRow,
 } from './workstation.models';
@@ -36,6 +37,27 @@ export class WorkstationApi {
     return this.http.put<readonly DiagnosisView[]>(`/api/v1/encounters/${id}/diagnoses`, {
       diagnoses,
     });
+  }
+
+  sign(id: number, content: Record<string, unknown>, version: number): Observable<EmrView> {
+    return this.http.post<EmrView>(`/api/v1/encounters/${id}/emr/sign`, { content, version });
+  }
+
+  amend(
+    id: number,
+    content: Record<string, unknown>,
+    version: number,
+    reason: string,
+  ): Observable<EmrView> {
+    return this.http.post<EmrView>(`/api/v1/encounters/${id}/emr/amend`, {
+      content,
+      version,
+      reason,
+    });
+  }
+
+  versions(id: number): Observable<readonly EmrVersionView[]> {
+    return this.http.get<readonly EmrVersionView[]>(`/api/v1/encounters/${id}/emr/versions`);
   }
 
   finish(id: number): Observable<EncounterDetail> {

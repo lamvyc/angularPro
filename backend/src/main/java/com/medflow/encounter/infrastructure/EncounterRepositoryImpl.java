@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import com.medflow.encounter.domain.DiagnosisView;
 import com.medflow.encounter.domain.EmrRecordRow;
+import com.medflow.encounter.domain.EmrTemplateRow;
+import com.medflow.encounter.domain.EmrVersionRow;
 import com.medflow.encounter.domain.EncounterRepository;
 import com.medflow.encounter.domain.EncounterRow;
 import lombok.RequiredArgsConstructor;
@@ -60,14 +62,93 @@ public class EncounterRepositoryImpl implements EncounterRepository {
     }
 
     @Override
-    public long insertEmr(long encounterId, long patientId, long doctorId, String recordNo, String contentJson) {
-        mapper.insertEmr(encounterId, patientId, doctorId, recordNo, contentJson);
+    public long insertEmr(long encounterId, long patientId, long doctorId, String recordNo,
+            String contentJson, long templateId, long templateVersionId) {
+        mapper.insertEmr(encounterId, patientId, doctorId, recordNo, contentJson, templateId,
+                templateVersionId);
         return mapper.lastInsertId();
     }
 
     @Override
     public int updateEmr(long id, String contentJson, int version) {
         return mapper.updateEmr(id, contentJson, version, null);
+    }
+
+    @Override
+    public int signEmr(long id, int version, String contentJson, String hash, long signerId, Instant at) {
+        return mapper.signEmr(id, version, contentJson, hash, signerId, at);
+    }
+
+    @Override
+    public int amendEmr(long id, int version, String contentJson, String hash, long signerId, Instant at,
+            String reason) {
+        return mapper.amendEmr(id, version, contentJson, hash, signerId, at, reason);
+    }
+
+    @Override
+    public void supersedeVersions(long recordId) {
+        mapper.supersedeVersions(recordId);
+    }
+
+    @Override
+    public long insertVersion(long recordId, int versionNo, String contentJson, String hash, String status,
+            Long authorId, Long signedBy, Instant signedAt, String changeReason) {
+        mapper.insertVersion(recordId, versionNo, contentJson, hash, status, authorId, signedBy,
+                signedAt, changeReason);
+        return mapper.lastInsertId();
+    }
+
+    @Override
+    public List<EmrVersionRow> listVersions(long recordId) {
+        return mapper.listVersions(recordId);
+    }
+
+    @Override
+    public Optional<EmrVersionRow> findVersion(long recordId, int versionNo) {
+        return mapper.findVersion(recordId, versionNo);
+    }
+
+    @Override
+    public Optional<EmrTemplateRow> findTemplateForDept(long deptId) {
+        return mapper.findTemplateForDept(deptId);
+    }
+
+    @Override
+    public Optional<EmrTemplateRow> findTemplate(long id) {
+        return mapper.findTemplate(id);
+    }
+
+    @Override
+    public List<EmrTemplateRow> listCurrentTemplates() {
+        return mapper.listCurrentTemplates();
+    }
+
+    @Override
+    public List<EmrTemplateRow> listTemplateVersions(long templateId) {
+        return mapper.listTemplateVersions(templateId);
+    }
+
+    @Override
+    public long insertTemplate(String code, String name, String scopeType, Long deptId, long operatorId) {
+        mapper.insertTemplate(code, name, scopeType, deptId, operatorId);
+        return mapper.lastInsertId();
+    }
+
+    @Override
+    public long insertTemplateVersion(long templateId, int versionNo, String schemaJson, String changelog,
+            long operatorId, Instant at) {
+        mapper.insertTemplateVersion(templateId, versionNo, schemaJson, changelog, operatorId, at);
+        return mapper.lastInsertId();
+    }
+
+    @Override
+    public void setTemplateCurrentVersion(long templateId, long versionId, long operatorId) {
+        mapper.setTemplateCurrentVersion(templateId, versionId, operatorId);
+    }
+
+    @Override
+    public void archiveTemplate(long templateId, long operatorId) {
+        mapper.archiveTemplate(templateId, operatorId);
     }
 
     @Override

@@ -4,11 +4,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.medflow.encounter.api.dto.CancelEncounterRequest;
+import com.medflow.encounter.api.dto.EmrAmendRequest;
 import com.medflow.encounter.api.dto.DiagnosesRequest;
 import com.medflow.encounter.api.dto.EmrSaveRequest;
 import com.medflow.encounter.application.EncounterAppService;
 import com.medflow.encounter.domain.DiagnosisView;
 import com.medflow.encounter.domain.EmrView;
+import com.medflow.encounter.domain.EmrVersionView;
 import com.medflow.encounter.domain.EncounterDetail;
 import com.medflow.encounter.domain.EncounterRow;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,6 +61,32 @@ public class EncounterController {
     @Operation(summary = "保存病历草稿（乐观锁）")
     public EmrView saveEmr(@PathVariable long id, @Valid @RequestBody EmrSaveRequest request) {
         return encounterAppService.saveEmr(id, request.content(), request.version());
+    }
+
+    @PostMapping("/{id}/emr/sign")
+    @PreAuthorize("hasAuthority('emr:sign')")
+    @Operation(summary = "签署病历（模板校验 + 内容哈希）")
+    public EmrView sign(@PathVariable long id, @Valid @RequestBody EmrSaveRequest request) {
+        return encounterAppService.sign(id, request.content(), request.version());
+    }
+
+    @PostMapping("/{id}/emr/amend")
+    @PreAuthorize("hasAuthority('emr:revise')")
+    @Operation(summary = "修订已签署病历，生成新版本")
+    public EmrView amend(@PathVariable long id, @Valid @RequestBody EmrAmendRequest request) {
+        return encounterAppService.amend(id, request.content(), request.version(), request.reason());
+    }
+
+    @GetMapping("/{id}/emr/versions")
+    @PreAuthorize("hasAuthority('emr:read')")
+    public List<EmrVersionView> versions(@PathVariable long id) {
+        return encounterAppService.versions(id);
+    }
+
+    @GetMapping("/{id}/emr/versions/{versionNo}")
+    @PreAuthorize("hasAuthority('emr:read')")
+    public EmrVersionView version(@PathVariable long id, @PathVariable int versionNo) {
+        return encounterAppService.version(id, versionNo);
     }
 
     @PutMapping("/{id}/diagnoses")

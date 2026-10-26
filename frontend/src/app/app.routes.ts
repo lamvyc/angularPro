@@ -88,6 +88,16 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/emr-templates',
+        title: '病历模板 · MedFlow',
+        canActivate: [permissionGuard],
+        data: { permission: 'emr:template:manage' },
+        loadComponent: () =>
+          import('./features/admin/emr-templates/emr-templates-page').then(
+            (module) => module.EmrTemplatesPage,
+          ),
+      },
+      {
         path: 'admin/audit',
         title: '审计日志 · MedFlow',
         canActivate: [permissionGuard],

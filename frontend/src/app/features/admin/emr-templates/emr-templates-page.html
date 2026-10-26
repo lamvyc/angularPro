@@ -1,0 +1,76 @@
+<div class="mf-page">
+  <header class="admin-head">
+    <div>
+      <span class="mf-eyebrow">系统 · 临床配置</span>
+      <h1>病历模板</h1>
+      <p>已发布版本不可原地修改；发布新版本后，新病历自动使用最新版本，历史病历固定旧版本。</p>
+    </div>
+    <div class="admin-actions">
+      <button mat-stroked-button type="button" (click)="load()">
+        <app-icon name="refresh" [size]="15" />刷新
+      </button>
+      <button mat-flat-button type="button" (click)="openCreate()">新建模板</button>
+    </div>
+  </header>
+
+  @if (message(); as message) {
+    <div class="notice notice-success" role="status">
+      <app-icon name="check" [size]="16" />{{ message }}
+      <button mat-button type="button" (click)="clear()">知道了</button>
+    </div>
+  }
+  @if (error(); as error) {
+    <div class="notice notice-error" role="alert">
+      <app-icon name="alert" [size]="16" />{{ error.message }} <code>{{ error.code }}</code>
+      <button mat-button type="button" (click)="clear()">关闭</button>
+    </div>
+  }
+
+  <mat-card appearance="outlined" class="admin-card">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>编码 / 名称</th>
+          <th>范围</th>
+          <th>当前版本</th>
+          <th>状态</th>
+          <th>变更说明</th>
+          <th class="row-actions">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (template of templates(); track template.id) {
+          <tr>
+            <td>
+              <div class="cell-main">
+                <strong>{{ template.name }}</strong>
+                <small class="mf-mono">{{ template.code }}</small>
+              </div>
+            </td>
+            <td>{{ template.scopeType === 'HOSPITAL' ? '全院' : '科室' }}</td>
+            <td class="mf-mono">v{{ template.versionNo }}</td>
+            <td>
+              <span [class]="template.status === 'PUBLISHED' ? 'tag tag-success' : 'tag'">
+                {{ template.status === 'PUBLISHED' ? '已发布' : '已归档' }}
+              </span>
+            </td>
+            <td>{{ template.changelog ?? '—' }}</td>
+            <td>
+              <div class="row-actions">
+                @if (template.status === 'PUBLISHED') {
+                  <button mat-button type="button" (click)="openPublish(template)">新版本</button>
+                  <button mat-button type="button" (click)="archive(template)">归档</button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-row">暂无模板</td></tr>
+        }
+      </tbody>
+    </table>
+  </mat-card>
+</div>

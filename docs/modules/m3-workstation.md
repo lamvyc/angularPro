@@ -6,7 +6,7 @@
 | 对应需求 | FR-M3-01 ~ FR-M3-10 |
 | 后端 | V5 诊断/事件/病历草稿、状态机、乐观锁、Redis 草稿副本 |
 | 前端 | 候诊队列、接诊、SOAP 草稿自动保存、诊断编辑、结束就诊 |
-| 测试 | 后端 46 个用例（4 个 M3 集成用例）、前端 37 个用例 |
+| 测试 | 后端 46 个用例（4 个 M3 集成用例）、前端 37 个用例；M4 后全量 48/38 |
 
 ## 1. 交付范围
 
@@ -16,7 +16,7 @@
 - 乐观锁：`version` 条件更新，冲突返回 `409 MED-STATE-002`，前端提示重新加载。
 - Redis 草稿副本：`emr:draft:{recordId}`，TTL 24h；后端较新版本时提示恢复。
 - 诊断：覆盖式保存，必须且只能一条 `PRIMARY`；数据库生成列唯一索引兜底。
-- 结束就诊：校验主诉非空、存在主诊断；`IN_PROGRESS → COMPLETED`，预约 `COMPLETED`。
+- 结束就诊：M3 校验主诉/主诊断；M4 起追加“病历已签署”，再完成 `IN_PROGRESS → COMPLETED`。
 - 取消就诊：`WAITING/IN_PROGRESS → CANCELLED`，预约同步取消。
 - 就诊事件追加：START / DIAGNOSES_SAVED / FINISH / CANCEL；全部关键动作写审计。
 

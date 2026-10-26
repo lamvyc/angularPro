@@ -164,7 +164,7 @@ class IamAdminTest extends AbstractIntegrationTest {
         assertThat(api.get("/api/v1/audit-logs", doctorToken).status()).isEqualTo(403);
         assertThat(api.get("/api/v1/departments", doctorToken).status()).isEqualTo(200);
 
-        var audit = api.get("/api/v1/audit-logs?action=ACCESS_DENIED&size=20", adminToken);
+        var audit = api.get("/api/v1/audit-logs?action=ACCESS_DENIED&actorId=2&size=20", adminToken);
         assertThat(audit.status()).isEqualTo(200);
         assertThat(audit.rawBody()).contains("ACCESS_DENIED", "张明", "/api/v1/users");
     }

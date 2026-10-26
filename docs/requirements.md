@@ -119,6 +119,7 @@ MedFlow 以"一次完整的门诊就诊"为主线，把 **预约 → 签到 → 
 医生工作站                 encounter:read（医生/护士）
 预约挂号                   appointment:read（医生/护士/收费员）
 排班管理                   schedule:read（医生/护士/收费员；编辑需 schedule:manage）
+病历模板（ADMIN）           emr:template:manage
 系统管理（ADMIN）
 ├── 用户管理                system:user:read
 ├── 角色权限                system:role:read

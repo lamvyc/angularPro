@@ -36,6 +36,31 @@ const DETAIL = {
     content: { chiefComplaint: '发热三天' },
     version: 2,
     updatedAt: '2026-10-26T06:01:00Z',
+    templateId: 1,
+    templateVersionId: 1,
+    templateName: '全科门诊病历',
+    schema: {
+      sections: [
+        {
+          key: 'chief',
+          title: '主诉与现病史',
+          fields: [
+            {
+              key: 'chiefComplaint',
+              type: 'textarea',
+              label: '主诉',
+              required: true,
+            },
+            { key: 'presentIllness', type: 'textarea', label: '现病史' },
+          ],
+        },
+      ],
+    },
+    signedAt: null,
+    signedBy: null,
+    signatureHash: null,
+    amendedAt: null,
+    amendReason: null,
   },
   diagnoses: [],
   draft: null,
@@ -48,8 +73,12 @@ describe('WorkstationPage', () => {
     queue: signal([ROW]),
     detail: signal(DETAIL),
     selectedId: signal(7),
-    content: signal({ chiefComplaint: '发热三天' }),
+    content: signal<Record<string, unknown>>({ chiefComplaint: '发热三天' }),
     diagnoses: signal([]),
+    versions: signal([]),
+    amending: signal(false),
+    signed: signal(false),
+    editable: signal(true),
     loadingQueue: signal(false),
     loadingDetail: signal(false),
     saving: signal(false),
@@ -68,6 +97,12 @@ describe('WorkstationPage', () => {
     removeDiagnosis: vi.fn(),
     saveDiagnoses: vi.fn(),
     saveNow: vi.fn(),
+    sign: vi.fn(),
+    beginAmend: vi.fn(),
+    submitAmend: vi.fn(),
+    cancelAmend: vi.fn(),
+    loadVersions: vi.fn(),
+    fieldError: vi.fn(() => null),
     finish: vi.fn(),
     cancel: vi.fn(),
     restoreDraft: vi.fn(),
@@ -94,7 +129,7 @@ describe('WorkstationPage', () => {
     expect(text).toContain('候诊队列');
     expect(text).toContain('李雷');
     expect(text).toContain('接诊中');
-    expect(text).toContain('电子病历草稿');
+    expect(text).toContain('电子病历');
     expect(text).toContain('主诉');
     expect(text).toContain('结束就诊');
   });
