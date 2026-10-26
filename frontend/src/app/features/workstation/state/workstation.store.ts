@@ -4,6 +4,8 @@ import { finalize, of, switchMap, type Observable } from 'rxjs';
 
 import { toMedflowError, type MedflowError } from '../../../core/http/problem-detail';
 import { WorkstationApi } from '../data/workstation.api';
+import { PrescriptionApi } from '../../prescriptions/data/prescription.api';
+import type { PrescriptionHeader } from '../../prescriptions/data/prescription.models';
 import type {
   DiagnosisInput,
   EmrVersionView,
@@ -26,6 +28,7 @@ function today(): string {
 @Injectable({ providedIn: 'root' })
 export class WorkstationStore {
   private readonly api = inject(WorkstationApi);
+  private readonly prescriptionApi = inject(PrescriptionApi);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly queueDate = signal(today());
@@ -35,6 +38,7 @@ export class WorkstationStore {
   readonly content = signal<Record<string, unknown>>({});
   readonly diagnoses = signal<readonly EditableDiagnosis[]>([]);
   readonly versions = signal<readonly EmrVersionView[]>([]);
+  readonly prescriptions = signal<readonly PrescriptionHeader[]>([]);
   readonly loadingQueue = signal(false);
   readonly loadingDetail = signal(false);
   readonly saving = signal(false);
@@ -394,6 +398,41 @@ export class WorkstationStore {
     this.draftAvailable.set(
       detail.draft !== null && JSON.stringify(detail.draft.content) !== JSON.stringify(detail.emr?.content),
     );
+    this.loadPrescriptions(detail.encounter.id);
+  }
+
+  loadPrescriptions(encounterId?: number): void {
+    const id = encounterId ?? this.selectedId();
+    if (id === null) {
+      return;
+    }
+    this.prescriptionApi.list(id).subscribe({
+      next: (prescriptions) => this.prescriptions.set(prescriptions),
+      error: (error: unknown) => this.error.set(toMedflowError(error)),
+    });
+  }
+
+  submitPrescription(prescription: PrescriptionHeader): void {
+    const key = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `rx-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    this.prescriptionApi.submit(prescription.id, prescription.version, key).subscribe({
+      next: () => {
+        this.message.set('处方已提交，等待药师审方');
+        this.loadPrescriptions();
+      },
+      error: (error: unknown) => this.error.set(toMedflowError(error)),
+    });
+  }
+
+  cancelPrescription(prescription: PrescriptionHeader, reason: string): void {
+    this.prescriptionApi.cancel(prescription.id, prescription.version, reason).subscribe({
+      next: () => {
+        this.message.set('处方已取消');
+        this.loadPrescriptions();
+      },
+      error: (error: unknown) => this.error.set(toMedflowError(error)),
+    });
   }
 
   private toDiagnosisInputs(): DiagnosisInput[] {

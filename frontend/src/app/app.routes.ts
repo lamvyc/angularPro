@@ -54,6 +54,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'pharmacy',
+        title: '药房审方 · MedFlow',
+        canActivate: [permissionGuard],
+        data: { permission: 'pharmacy:review' },
+        loadComponent: () =>
+          import('./features/pharmacy/ui/pharmacy-page').then((module) => module.PharmacyPage),
+      },
+      {
         path: 'schedules',
         title: '排班管理 · MedFlow',
         canActivate: [permissionGuard],

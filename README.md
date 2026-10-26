@@ -16,7 +16,7 @@
 | M5 | 开方、审方、驳回重提、幂等提交、状态机 | 计划中 |
 | M6 | 批次库存、FEFO 预占、发药退药、补偿与对账 | 计划中 |
 
-设计文档： [需求](docs/requirements.md) · [架构](docs/architecture.md) · [数据库](docs/database-design.md) · [业务流程](docs/business-flows.md) · [开发计划](docs/development-plan.md) · [M1 实现说明](docs/modules/m1-iam.md) · [M2 实现说明](docs/modules/m2-appointment.md) · [M3 实现说明](docs/modules/m3-workstation.md) · [M4 实现说明](docs/modules/m4-emr.md)
+设计文档： [需求](docs/requirements.md) · [架构](docs/architecture.md) · [数据库](docs/database-design.md) · [业务流程](docs/business-flows.md) · [开发计划](docs/development-plan.md) · [M1 实现说明](docs/modules/m1-iam.md) · [M2 实现说明](docs/modules/m2-appointment.md) · [M3 实现说明](docs/modules/m3-workstation.md) · [M4 实现说明](docs/modules/m4-emr.md) · [M5 实现说明](docs/modules/m5-prescription.md)
 
 ## 技术栈（已锁定版本）
 
@@ -89,7 +89,7 @@ pnpm web:start
 | `cashier1` | 收费员 | 全科医学科 | DEPT |
 | `nurse3` | 护士 | 全科医学科 | DEPT |
 
-不同角色登录后菜单不同：医生/护士有医生工作站；医生/护士/收费员有预约挂号与排班管理；医生可接诊、按结构化模板签署/修订病历、下诊断，收费员可预约收费，护士可签到；管理员拥有用户、角色、科室、病历模板与审计后台。
+不同角色登录后菜单不同：医生/护士有医生工作站；医生/护士/收费员有预约挂号与排班管理；医生可接诊、按结构化模板签署/修订病历、下诊断，收费员可预约收费，护士可签到；管理员拥有用户、角色、科室、病历模板与审计后台；药师有药房审方菜单。
 
 ### 4. 测试与构建
 
@@ -171,9 +171,9 @@ cd backend && ./mvnw verify
 | 项目 | 命令 / 方式 | 结果 |
 | --- | --- | --- |
 | 前端静态检查 | `pnpm --filter medflow-web lint` | 0 error |
-| 前端单元测试 | `pnpm --filter medflow-web test` | 20 个文件 / 38 个用例通过 |
+| 前端单元测试 | `pnpm --filter medflow-web test` | 21 个文件 / 39 个用例通过 |
 | 前端生产构建 | `pnpm --filter medflow-web build` | 成功，初始包 ≈ 315 kB（未压缩） |
-| 后端单元 + 架构 + 集成测试 | `cd backend && ./mvnw verify` | 48 个用例通过（Testcontainers 真实 MySQL/Redis） |
+| 后端单元 + 架构 + 集成测试 | `cd backend && ./mvnw verify` | 53 个用例通过（Testcontainers 真实 MySQL/Redis） |
 | 本地依赖健康 | `docker compose ps` | MySQL / Redis 均 healthy |
 | 后端运行 | `GET /actuator/health` | `UP`，db/redis 均 `UP` |
 | 未登录访问 | `GET /api/v1/system/info` | `401` + `application/problem+json`（`MED-AUTH-001`） |
@@ -185,6 +185,8 @@ cd backend && ./mvnw verify
 | 结束就诊 | 主诉 + 主诊断 | encounter/appointment 均 COMPLETED |
 | 病历签署 | 条件必填 + 签署 | 缺字段 422；签署后草案接口 409 |
 | 病历修订 | 已签署病历修订 | 旧版本 SUPERSEDED，新版本 SIGNED，记录 AMENDED |
+| 处方审方 | 提交 → 审核通过 | FEFO 预占，处方 APPROVED，72h 过期 |
+| 库存不足 | 超量处方审核通过 | 409 MED-STOCK-001，保持 UNDER_REVIEW，无预占 |
 | 数据范围 | 医生 `/api/v1/staff/doctors` | 仅返回皮肤科张明；跨科室参数 403 |
 | 越权审计 | 医生访问 `/api/v1/users` 后查审计 | `403`，审计出现 `ACCESS_DENIED` |
 | API 文档 | `GET /v3/api-docs` | `200` |

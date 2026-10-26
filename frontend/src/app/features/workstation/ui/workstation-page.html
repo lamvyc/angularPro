@@ -270,6 +270,51 @@
             }
           </div>
 
+          <div class="rx-head">
+            <span class="block-label">处方（提交后药师审方，通过时预占库存）</span>
+            <button
+              *appHasPermission="'prescription:create'"
+              mat-button
+              type="button"
+              (click)="openPrescription()"
+              [disabled]="detail.encounter.status !== 'IN_PROGRESS'"
+            >
+              新建处方
+            </button>
+          </div>
+          <div class="rx-list">
+            @for (prescription of store.prescriptions(); track prescription.id) {
+              <div class="rx-row">
+                <div class="rx-main">
+                  <strong class="mf-mono">{{ prescription.prescriptionNo }}</strong>
+                  <span [class]="prescriptionClass(prescription.status)">
+                    {{ prescriptionStatus(prescription.status) }}
+                  </span>
+                  <small>
+                    v{{ prescription.version }} · 修订 {{ prescription.revisionNo }} · 创建于
+                    {{ prescription.createdAt }}
+                  </small>
+                  @if (prescription.rejectReason) {
+                    <small class="reject">驳回原因：{{ prescription.rejectReason }}</small>
+                  }
+                </div>
+                <div class="rx-actions">
+                  @if (canEditPrescription(prescription.status) && detail.encounter.status === 'IN_PROGRESS') {
+                    <button mat-button type="button" (click)="openPrescription(prescription)">编辑</button>
+                  }
+                  @if (canSubmitPrescription(prescription.status)) {
+                    <button mat-button type="button" (click)="submitPrescription(prescription)">提交</button>
+                  }
+                  @if (canCancelPrescription(prescription.status)) {
+                    <button mat-button type="button" (click)="cancelPrescription(prescription)">取消</button>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <p class="muted">暂无处方</p>
+            }
+          </div>
+
           <div class="actions">
             @if (!store.signed()) {
               <button mat-button type="button" (click)="store.saveNow()" [disabled]="store.saving()">

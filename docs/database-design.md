@@ -481,8 +481,8 @@ CONSTRAINT chk_batch_qty CHECK (stock_qty >= 0 AND reserved_qty >= 0 AND reserve
 | V5 | `V5__encounter_detail.sql` | 诊断、就诊事件、病历草稿、排班原子序号、工作站菜单 | M3 |
 | V6 | `V6__emr_structured.sql` | 模板、模板版本、签署字段、病历版本快照、内置模板 | M4 |
 | V7 | `V7__emr_template_read_permission.sql` | 管理员模板读权限修复 | M4 |
-| V8 | `V8__prescription.sql` | 处方、明细、修订、审核、预占、事件 | M5 |
-| V9 | `V9__pharmacy.sql` | 药品、批次、预占、流水 + 演示药品 | M6 |
+| V8 | `V8__prescription.sql` | 处方、明细、修订、审核、事件 + 最小药品/批次/预占/流水 | M5 |
+| V9 | `V9__pharmacy.sql` | 药品目录管理、批次入库、发药/退药、盘点与流水页面 | M6 |
 | R | `db/seed/R__demo_seed.sql` | 仅 dev/local 启用的合成演示数据 | 各阶段 |
 
 规则：

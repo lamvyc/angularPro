@@ -76,6 +76,7 @@ describe('WorkstationPage', () => {
     content: signal<Record<string, unknown>>({ chiefComplaint: '发热三天' }),
     diagnoses: signal([]),
     versions: signal([]),
+    prescriptions: signal([]),
     amending: signal(false),
     signed: signal(false),
     editable: signal(true),

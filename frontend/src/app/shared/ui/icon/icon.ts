@@ -9,6 +9,7 @@ const ICON_PATHS = {
   calendar: ['M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14H4z', 'M8 2v5', 'M16 2v5', 'M4 10h16'],
   clipboard: ['M9 4h6v3H9z', 'M8 5H6v16h12V5h-2', 'M9 12h6', 'M9 16h4'],
   prescription: ['M14 3H6v18h12V7z', 'M14 3v4h4', 'M9 12h6', 'M9 16h6'],
+  pill: ['M10.5 20.5a7 7 0 0 1-9.9-9.9l6.1-6.1a7 7 0 0 1 9.9 9.9z', 'M8.5 8.5l7 7'],
   package: ['M3 7l9-4 9 4-9 4z', 'M3 7v10l9 4 9-4V7', 'M12 11v10'],
   lock: ['M6 11h12v9H6z', 'M9 11V8a3 3 0 0 1 6 0v3'],
   users: [

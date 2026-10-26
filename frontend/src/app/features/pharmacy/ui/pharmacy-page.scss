@@ -1,0 +1,28 @@
+:host {
+  display: block;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 9px 12px;
+  border-radius: var(--mf-radius-sm);
+  font-size: 12px;
+}
+
+.notice button {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.notice-success {
+  background: var(--mf-success-soft);
+  color: var(--mf-success);
+}
+
+.notice-error {
+  background: var(--mf-danger-soft);
+  color: var(--mf-danger);
+}

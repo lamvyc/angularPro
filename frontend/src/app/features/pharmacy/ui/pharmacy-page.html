@@ -1,0 +1,83 @@
+<div class="mf-page">
+  <header class="admin-head">
+    <div>
+      <span class="mf-eyebrow">药房 · 审方</span>
+      <h1>处方审核</h1>
+      <p>通过时按先过期先出（FEFO）跨批次预占库存；库存不足整单失败，处方保持审核中。</p>
+    </div>
+    <div class="admin-actions">
+      <button mat-stroked-button type="button" (click)="load()">
+        <app-icon name="refresh" [size]="15" />刷新队列
+      </button>
+    </div>
+  </header>
+
+  @if (message(); as message) {
+    <div class="notice notice-success" role="status">
+      <app-icon name="check" [size]="16" />{{ message }}
+      <button mat-button type="button" (click)="clear()">知道了</button>
+    </div>
+  }
+  @if (error(); as error) {
+    <div class="notice notice-error" role="alert">
+      <app-icon name="alert" [size]="16" />{{ error.message }} <code>{{ error.code }}</code>
+      <button mat-button type="button" (click)="clear()">关闭</button>
+    </div>
+  }
+
+  <mat-card appearance="outlined" class="admin-card">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>处方号 / 患者</th>
+          <th>医生 / 科室</th>
+          <th>修订</th>
+          <th>状态</th>
+          <th>有效期</th>
+          <th class="row-actions">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (prescription of prescriptions(); track prescription.id) {
+          <tr>
+            <td>
+              <div class="cell-main">
+                <strong class="mf-mono">{{ prescription.prescriptionNo }}</strong>
+                <small>{{ prescription.patientName }}</small>
+              </div>
+            </td>
+            <td>
+              <div class="cell-main">
+                <span>{{ prescription.doctorName }}</span>
+                <small>{{ prescription.deptName }}</small>
+              </div>
+            </td>
+            <td>v{{ prescription.revisionNo }}</td>
+            <td>
+              <span [class]="statusClass(prescription.status)">
+                {{ statusLabel(prescription.status) }}
+              </span>
+            </td>
+            <td>{{ prescription.expiresAt ?? '—' }}</td>
+            <td>
+              <div class="row-actions">
+                @if (prescription.status === 'SUBMITTED') {
+                  <button mat-button type="button" (click)="startReview(prescription)">开始审方</button>
+                }
+                @if (prescription.status === 'UNDER_REVIEW') {
+                  <button mat-button type="button" (click)="approve(prescription)">通过并预占</button>
+                  <button mat-button type="button" (click)="reject(prescription)">驳回</button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-row">暂无待处理处方</td></tr>
+        }
+      </tbody>
+    </table>
+  </mat-card>
+</div>

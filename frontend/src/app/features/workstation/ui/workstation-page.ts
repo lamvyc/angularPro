@@ -9,6 +9,13 @@ import { Icon } from '../../../shared/ui/icon/icon';
 import { CancelDialog } from '../../appointments/ui/appointment-dialogs';
 import type { EmrCondition, EmrFieldDef } from '../data/workstation.models';
 import { WorkstationStore } from '../state/workstation.store';
+import { PrescriptionDialog } from '../../prescriptions/ui/prescription-dialog';
+import { ReasonDialog } from '../../prescriptions/ui/reason-dialog';
+import { PrescriptionApi } from '../../prescriptions/data/prescription.api';
+import type {
+  PrescriptionHeader,
+  PrescriptionView,
+} from '../../prescriptions/data/prescription.models';
 import { AmendReasonDialog, EmrHistoryDialog } from './workstation-dialogs';
 
 interface FieldOption {
@@ -33,6 +40,7 @@ interface FieldOption {
 export class WorkstationPage {
   protected readonly store = inject(WorkstationStore);
   private readonly dialog = inject(MatDialog);
+  private readonly prescriptionApi = inject(PrescriptionApi);
 
   protected readonly sections = computed(() => this.store.detail()?.emr?.schema?.sections ?? []);
 
@@ -117,6 +125,106 @@ export class WorkstationPage {
         this.store.beginAmend(reason);
       }
     });
+  }
+
+  protected openPrescription(prescription?: PrescriptionHeader): void {
+    const id = this.store.selectedId();
+    if (id === null) {
+      return;
+    }
+    if (prescription) {
+      this.prescriptionApi.detail(prescription.id).subscribe({
+        next: (view) => this.openPrescriptionDialog(id, view),
+        error: () => this.store.loadPrescriptions(),
+      });
+      return;
+    }
+    this.openPrescriptionDialog(id, undefined);
+  }
+
+  private openPrescriptionDialog(
+    encounterId: number,
+    prescription?: PrescriptionView,
+  ): void {
+    const ref = this.dialog.open(PrescriptionDialog, {
+      width: '900px',
+      data: { encounterId, prescription },
+    });
+    ref.afterClosed().subscribe((saved) => {
+      if (saved) {
+        this.store.loadPrescriptions();
+      }
+    });
+  }
+
+  protected submitPrescription(prescription: PrescriptionHeader): void {
+    this.store.submitPrescription(prescription);
+  }
+
+  protected cancelPrescription(prescription: PrescriptionHeader): void {
+    const ref = this.dialog.open<ReasonDialog, { title: string; label: string; confirm: string }, string>(
+      ReasonDialog,
+      {
+        width: '440px',
+        data: { title: '取消处方', label: '取消原因', confirm: '确认取消' },
+      },
+    );
+    ref.afterClosed().subscribe((reason) => {
+      if (reason) {
+        this.store.cancelPrescription(prescription, reason);
+      }
+    });
+  }
+
+  protected prescriptionStatus(status: string): string {
+    switch (status) {
+      case 'DRAFT':
+        return '草稿';
+      case 'SUBMITTED':
+        return '待审方';
+      case 'UNDER_REVIEW':
+        return '审核中';
+      case 'APPROVED':
+        return '已通过';
+      case 'REJECTED':
+        return '已驳回';
+      case 'CANCELLED':
+        return '已取消';
+      case 'EXPIRED':
+        return '已过期';
+      default:
+        return status;
+    }
+  }
+
+  protected prescriptionClass(status: string): string {
+    switch (status) {
+      case 'DRAFT':
+        return 'tag';
+      case 'SUBMITTED':
+        return 'tag tag-warning';
+      case 'UNDER_REVIEW':
+        return 'tag tag-warning';
+      case 'APPROVED':
+        return 'tag tag-success';
+      case 'REJECTED':
+      case 'EXPIRED':
+        return 'tag tag-danger';
+      default:
+        return 'tag';
+    }
+  }
+
+  protected canEditPrescription(status: string): boolean {
+    return status === 'DRAFT' || status === 'REJECTED';
+  }
+
+  protected canSubmitPrescription(status: string): boolean {
+    return status === 'DRAFT' || status === 'REJECTED';
+  }
+
+  protected canCancelPrescription(status: string): boolean {
+    return ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED'].includes(status);
   }
 
   protected openHistory(): void {
