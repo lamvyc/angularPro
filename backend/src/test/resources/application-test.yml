@@ -12,3 +12,7 @@ management:
   endpoint:
     health:
       show-details: always
+
+medflow:
+  jwt:
+    secret: test-medflow-jwt-secret-key-at-least-32-bytes

@@ -35,3 +35,4 @@ infra/data/
 .mvn-home/
 .cache/
 .pnpm-store/
+.superpowers/

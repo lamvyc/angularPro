@@ -10,6 +10,8 @@ public enum ErrorCode {
     AUTH_INVALID(HttpStatus.UNAUTHORIZED, "MED-AUTH-001", "登录凭据无效", "用户名或密码错误"),
     AUTH_LOCKED(HttpStatus.LOCKED, "MED-AUTH-002", "账号已锁定", "登录失败次数过多，请稍后再试"),
     AUTHZ_DENIED(HttpStatus.FORBIDDEN, "MED-AUTHZ-001", "无访问权限", "没有执行该操作的权限"),
+    AUTH_REFRESH_INVALID(HttpStatus.UNAUTHORIZED, "MED-AUTH-003", "会话已失效", "刷新令牌无效或已被使用"),
+    AUTH_USER_DISABLED(HttpStatus.FORBIDDEN, "MED-AUTH-004", "账号已停用", "账号已被停用，请联系管理员"),
     NOT_FOUND(HttpStatus.NOT_FOUND, "MED-NOT-FOUND", "资源不存在", "资源不存在或已被删除"),
     STATE_CONFLICT(HttpStatus.CONFLICT, "MED-STATE-001", "状态冲突", "当前状态不允许该操作"),
     VERSION_CONFLICT(HttpStatus.CONFLICT, "MED-STATE-002", "数据已被修改", "数据已被其他用户修改，请刷新后重试"),

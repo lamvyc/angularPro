@@ -13,3 +13,8 @@ management:
     health:
       # 本地开发展示 db/redis 详情，便于工作台状态卡调试；生产/演示环境默认不展示。
       show-details: always
+
+medflow:
+  jwt:
+    # 仅本地演示使用；生产环境必须通过 JWT_SECRET 注入至少 32 字节的随机密钥。
+    secret: local-demo-medflow-jwt-secret-key-32bytes
