@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.trace {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mf-mono);
+  font-size: 10px;
+  color: var(--mf-muted);
+}
+
+.error-code {
+  display: block;
+  margin-top: 2px;
+  color: var(--mf-danger);
+  font-family: var(--mf-mono);
+  font-size: 9.5px;
+}

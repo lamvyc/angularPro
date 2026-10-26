@@ -419,6 +419,21 @@
   color: var(--mf-primary);
 }
 
+.roadmap-item.is-done {
+  border-color: rgba(20, 125, 100, 0.25);
+  background: linear-gradient(180deg, rgba(226, 246, 239, 0.5), #fff);
+}
+
+.is-done .phase {
+  background: var(--mf-success-soft);
+  color: var(--mf-success);
+}
+
+.is-done .phase-state {
+  background: var(--mf-success-soft);
+  color: var(--mf-success);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

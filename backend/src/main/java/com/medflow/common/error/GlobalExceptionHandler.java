@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.medflow.iam.application.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -32,9 +33,11 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private final ProblemDetailsFactory problemDetailsFactory;
+    private final AuditService auditService;
 
-    public GlobalExceptionHandler(ProblemDetailsFactory problemDetailsFactory) {
+    public GlobalExceptionHandler(ProblemDetailsFactory problemDetailsFactory, AuditService auditService) {
         this.problemDetailsFactory = problemDetailsFactory;
+        this.auditService = auditService;
     }
 
     @ExceptionHandler(BusinessException.class)
@@ -65,6 +68,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        try {
+            auditService.failure("ACCESS_DENIED", "API", request.getRequestURI(),
+                    ErrorCode.AUTHZ_DENIED.code(),
+                    com.medflow.common.security.SecurityUtils.currentUser().map(user -> user.id()).orElse(null),
+                    com.medflow.common.security.SecurityUtils.currentUser().map(user -> user.realName()).orElse(null));
+        } catch (RuntimeException auditFailure) {
+            log.warn("failed to record access denied audit for {}", request.getRequestURI(), auditFailure);
+        }
         return problemDetailsFactory.create(ErrorCode.AUTHZ_DENIED, request, null);
     }
 

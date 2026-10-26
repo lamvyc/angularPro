@@ -1,0 +1,99 @@
+<div class="mf-page">
+  <header class="admin-head">
+    <div>
+      <span class="mf-eyebrow">系统管理 · 审计</span>
+      <h1>审计日志</h1>
+      <p>记录登录、越权、用户/角色/科室变更。日志只追加，不提供修改与删除接口。</p>
+    </div>
+    <div class="admin-actions">
+      <button mat-stroked-button type="button" (click)="load()" [disabled]="loading()">
+        <app-icon name="refresh" [size]="15" />刷新
+      </button>
+    </div>
+  </header>
+
+  <mat-card appearance="outlined" class="admin-card">
+    <div class="admin-toolbar">
+      <input
+        placeholder="动作，如 USER_CREATED"
+        (input)="onAction($event)"
+        (keydown.enter)="search()"
+      />
+      <input
+        placeholder="操作人 ID"
+        inputmode="numeric"
+        (input)="onActor($event)"
+        (keydown.enter)="search()"
+      />
+      <button mat-button type="button" (click)="search()">查询</button>
+      <span class="spacer"></span>
+      <span class="mf-muted">最近 7 天 · 共 {{ total() }} 条</span>
+    </div>
+
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    @if (error(); as error) {
+      <div class="admin-error" role="alert">
+        <app-icon name="alert" [size]="15" />
+        {{ error.message }} <code>{{ error.code }}</code>
+      </div>
+    }
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>时间</th>
+          <th>操作人</th>
+          <th>动作</th>
+          <th>资源</th>
+          <th>结果</th>
+          <th>IP</th>
+          <th>Trace ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.id) {
+          <tr>
+            <td>{{ row.createdAt | date: 'MM-dd HH:mm:ss' }}</td>
+            <td>{{ row.actorName ?? '系统' }}</td>
+            <td>
+              <div class="cell-main">
+                <strong>{{ actionLabel(row.action) }}</strong>
+                <small class="mf-mono">{{ row.action }}</small>
+              </div>
+            </td>
+            <td>
+              <div class="cell-main">
+                <span>{{ row.resourceType }}</span>
+                <small>{{ row.resourceId ?? '—' }}</small>
+              </div>
+            </td>
+            <td>
+              <span [class]="row.result === 'SUCCESS' ? 'tag tag-success' : 'tag tag-danger'">
+                {{ row.result === 'SUCCESS' ? '成功' : '失败' }}
+              </span>
+              @if (row.errorCode) {
+                <small class="error-code">{{ row.errorCode }}</small>
+              }
+            </td>
+            <td class="mf-mono">{{ row.ip ?? '—' }}</td>
+            <td class="trace">{{ row.traceId ?? '—' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty-row">暂无审计记录</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="pager">
+      <span>第 {{ page() }} / {{ totalPages() }} 页</span>
+      <button mat-button type="button" (click)="prevPage()" [disabled]="page() <= 1">上一页</button>
+      <button mat-button type="button" (click)="nextPage()" [disabled]="page() >= totalPages()">
+        下一页
+      </button>
+    </div>
+  </mat-card>
+</div>

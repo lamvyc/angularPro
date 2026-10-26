@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
+import { AuthStore } from '../../../core/auth/auth.store';
 import type { ServiceState } from '../data/system.models';
 import { SystemStatusStore } from '../state/system-status.store';
 import { Icon, type IconName } from '../../../shared/ui/icon/icon';
@@ -30,6 +31,7 @@ interface RoadmapItem {
 })
 export class DashboardPage {
   protected readonly store = inject(SystemStatusStore);
+  protected readonly auth = inject(AuthStore);
 
   protected readonly services = computed<readonly ServiceRow[]>(() => [
     {
@@ -52,6 +54,11 @@ export class DashboardPage {
     },
   ]);
 
+  protected readonly dataScopeLabel = computed(() => {
+    const scope = this.auth.user()?.dataScope;
+    return scope === 'ALL' ? '全院' : scope === 'DEPT' ? '本科室' : '仅本人';
+  });
+
   protected readonly lastCheckedLabel = computed(() => {
     const checkedAt = this.store.lastCheckedAt();
     if (checkedAt === null) {
@@ -72,12 +79,12 @@ export class DashboardPage {
   });
 
   protected readonly completed: readonly string[] = [
-    '5 份设计文档：需求 / 架构 / 数据库 / 流程 / 计划',
-    'Docker Compose：MySQL 8.4 + Redis 8',
-    'Spring Boot 4.1.2 分层骨架与 Flyway 迁移',
-    'Angular 22 工程、Material 主题与 Vitest',
-    '统一 Problem Details、请求 ID 与安全基线',
-    'Testcontainers 集成测试与 CI 质量门禁',
+    'JWT 登录 + 刷新令牌一次性轮换 + 登出拒绝名单',
+    '5 角色 / 48 权限的 RBAC 与动态菜单',
+    '按钮 + 接口双重权限校验，越权返回 403',
+    '科室数据范围隔离与跨科室拦截',
+    '用户 / 角色 / 科室后台管理与审计查询',
+    '登录锁定、密码重置吊销会话、授权缓存失效',
   ];
 
   protected readonly roadmap: readonly RoadmapItem[] = [
@@ -85,13 +92,13 @@ export class DashboardPage {
       phase: 'M1',
       title: '权限体系',
       description: '登录、JWT、菜单/按钮/接口权限、科室数据隔离、审计',
-      status: 'next',
+      status: 'done',
     },
     {
       phase: 'M2',
       title: '预约挂号',
       description: '排班号源、并发防超卖、重复预约、退号退费',
-      status: 'planned',
+      status: 'next',
     },
     {
       phase: 'M3',
@@ -125,12 +132,11 @@ export class DashboardPage {
     'Angular Material 22',
     'Vitest 5',
     'Spring Boot 4.1',
-    'Spring Security 7',
+    'Spring Security 7 · JWT',
     'MyBatis-Plus 3.5',
-    'MySQL 8.4',
-    'Redis 8',
-    'Flyway 12',
-    'Testcontainers 2',
+    'MySQL 8.4 · Redis 8',
+    'Flyway 12 · Testcontainers 2',
+    '审计与数据范围隔离',
   ];
 
   protected readonly documents: readonly { file: string; title: string }[] = [

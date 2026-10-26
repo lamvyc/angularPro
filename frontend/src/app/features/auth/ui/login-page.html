@@ -1,0 +1,96 @@
+<div class="login-shell">
+  <section class="brand-panel">
+    <div class="brand-mark"><app-icon name="pulse" [size]="30" /></div>
+    <p class="eyebrow">MedFlow · 门诊诊疗管理平台</p>
+    <h1>把门诊业务的<br /><span>状态、权限与审计</span><br />放在同一个闭环里。</h1>
+    <p class="lede">
+      预约、接诊、病历、处方与药房库存。每一个动作都有权限边界，每一次状态变化都可追溯。
+    </p>
+    <div class="feature-list">
+      <div><app-icon name="shield" [size]="17" /> JWT + 刷新令牌轮换</div>
+      <div><app-icon name="users" [size]="17" /> 角色 · 菜单 · 按钮 · 接口</div>
+      <div><app-icon name="database" [size]="17" /> 科室数据隔离 + 审计</div>
+    </div>
+    <p class="demo-note">演示环境 · 全部为合成数据 · 不包含真实患者信息</p>
+  </section>
+
+  <section class="form-panel">
+    <mat-card appearance="outlined" class="login-card">
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+      <div class="card-heading">
+        <span class="step">M1 · 权限体系</span>
+        <h2>登录工作台</h2>
+        <p>使用演示账号或输入用户名密码</p>
+      </div>
+
+      <form (submit)="submit($event)" novalidate>
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>用户名</mat-label>
+          <input
+            matInput
+            autocomplete="username"
+            [formField]="loginForm.username"
+            placeholder="请输入用户名"
+          />
+          @if (loginForm.username().touched() && loginForm.username().invalid()) {
+            <mat-hint class="field-error">请输入用户名</mat-hint>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>密码</mat-label>
+          <input
+            matInput
+            [type]="passwordType()"
+            autocomplete="current-password"
+            [formField]="loginForm.password"
+            placeholder="请输入密码"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            class="eye-button"
+            (click)="togglePassword()"
+            [attr.aria-label]="showPassword() ? '隐藏密码' : '显示密码'"
+          >
+            <app-icon name="lock" [size]="17" />
+          </button>
+          @if (loginForm.password().touched() && loginForm.password().invalid()) {
+            <mat-hint class="field-error">请输入密码</mat-hint>
+          }
+        </mat-form-field>
+
+        @if (error(); as error) {
+          <div class="error-banner" role="alert">
+            <app-icon name="alert" [size]="16" />
+            <span
+              >{{ error.message }} <code>{{ error.code }}</code></span
+            >
+          </div>
+        }
+
+        <button mat-flat-button class="submit" type="submit" [disabled]="loading()">
+          {{ loading() ? '正在登录…' : '登录' }}
+          <app-icon name="arrowRight" [size]="16" />
+        </button>
+      </form>
+
+      <div class="demo-accounts">
+        <span class="demo-label">一键填入演示账号</span>
+        <div class="account-chips">
+          @for (account of demoAccounts; track account.username) {
+            <button type="button" class="account-chip" (click)="fill(account)">
+              {{ account.label }}
+            </button>
+          }
+        </div>
+        <p class="password-hint">统一密码 <code>Medflow@2026</code></p>
+      </div>
+    </mat-card>
+
+    <p class="footer-note">MedFlow v0.1 · Angular 22 · Spring Boot 4</p>
+  </section>
+</div>

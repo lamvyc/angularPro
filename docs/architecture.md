@@ -215,12 +215,13 @@ sequenceDiagram
     A->>A: @PreAuthorize("hasAuthority('appointment:create')")
 ```
 
-- 访问令牌：JWT HS256（Nimbus `JwtEncoder`），claims：`sub`、`uid`、`deptId`、`roles`、`jti`、`exp`；15 分钟。
-- 刷新令牌：随机 256bit，Redis 存 `SHA-256(token)` → `{userId, sessionId}`，TTL 7 天；**一次性轮换**，检测重放即吊销会话。
+- 访问令牌：JWT HS256（Nimbus `JwtEncoder`），claims：`sub`（用户 ID）、`username`、`deptId`、`roles`、`jti`、`exp`；15 分钟。权限不在令牌里，每次请求从 Redis/数据库加载，角色变更可即时生效。
+- 刷新令牌：随机 256bit，Redis 存 `SHA-256(token)` → `userId|sessionId|ACTIVE`，TTL 7 天；Lua 原子轮换为 `ROTATED`，检测重放即吊销当前会话。
 - 登出：`jti` 加入 Redis 拒绝名单（TTL = 剩余有效期）并删除刷新令牌。
-- 权限缓存：`perm:user:{id}`，TTL 10 分钟；角色授权变更时按用户失效。
-- 登录失败：`login:fail:{username}` 计数，5 次 / 15 分钟锁定；锁定状态写入用户表 `LOCKED` 便于管理端展示。
-- 密码：BCrypt cost 12；禁止返回密码哈希；修改密码后吊销全部刷新令牌。
+- 权限缓存：`perm:user:{id}`（AuthoritySnapshot JSON，TTL 10 分钟）；角色授权、用户角色/状态/资料变更时主动失效。
+- 登录失败：数据库 `failed_attempts` / `locked_until` 计数，5 次 / 15 分钟锁定；锁定状态写入 `sys_user.status='LOCKED'`，由管理员启用或到期自动解除。
+- 密码：BCrypt cost 12；禁止返回密码哈希；重置密码后吊销该用户全部刷新令牌。
+- 越权审计：方法级 403 由全局异常处理器记录 `ACCESS_DENIED`（用户、路径、错误码），失败审计使用独立事务提交。
 - CORS：开发期允许 `http://localhost:4200`；生产同源反向代理。
 - CSRF：Bearer Token + 无 Cookie 会话，关闭 CSRF；CSP 由 Nginx 配置。
 
@@ -482,7 +483,7 @@ job smoke   : docker compose up -d → 等待健康 → curl 健康检查 → �
 ### ADR-004：正确性依赖数据库原子操作，Redis 不做锁
 
 - **背景**：并发超卖、库存扣减是最容易出错的部分。
-- **决策**：条件更新 + 唯一约束 + 乐观锁；Redis 仅用于缓存、刷新令牌、草稿、登录计数。
+- **决策**：条件更新 + 唯一约束 + 乐观锁；Redis 仅用于权限缓存、刷新令牌、登出拒绝名单与后续的草稿。登录失败计数与锁定放在数据库，便于审计与管理端展示。
 - **代价**：热点号源/批次会有行锁竞争（通过短事务和索引缓解）。
 - **替代**：Redis 分布式锁（故障时正确性受损，且难以测试）。
 
@@ -499,7 +500,7 @@ job smoke   : docker compose up -d → 等待健康 → curl 健康检查 → �
 | --- | --- | --- |
 | Boot 4 / Jackson 3 生态较新 | 第三方库不兼容 | 已验证核心依赖；第三方库升级前跑集成测试；避免引入 Jackson 2 插件 |
 | MyBatis-Plus 新 starter 的边界行为 | 分页/乐观锁失效 | 关键路径手写 SQL；集成测试覆盖受影响行数 |
-| Signal Forms 与 Material/CDK 边缘组件 | 表单控件异常 | 已冒烟核心组合；M1 完成前做登录/建档表单验证；保留 Reactive Forms 回退 |
+| Signal Forms 与 Material/CDK 边缘组件 | 表单控件异常 | 登录页使用 Signal Forms 并通过组件测试；后台多选场景使用原生控件 + 手动校验，保留 Reactive Forms 回退 |
 | 动态病历 Schema 复杂度失控 | 表单引擎难维护 | 限制字段类型白名单；规则 DSL 只支持 `visibleWhen/requiredWhen/范围`；服务端统一校验 |
 | 并发测试不稳定 | CI 偶发失败 | Testcontainers + 固定线程数 + 断言"成功数=容量"而非时序；重试仅用于基础设施 |
 | 演示数据与真实数据混淆 | 合规风险 | 所有姓名/证件/电话为合成；页面顶部标注"演示数据"；禁止导入真实数据 |

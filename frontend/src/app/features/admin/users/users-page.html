@@ -1,0 +1,141 @@
+<div class="mf-page">
+  <header class="admin-head">
+    <div>
+      <span class="mf-eyebrow">系统管理 · 用户</span>
+      <h1>用户管理</h1>
+      <p>创建账号、分配角色、重置密码。角色变更后相关用户的权限缓存会立即失效。</p>
+    </div>
+    <div class="admin-actions">
+      <button mat-stroked-button type="button" (click)="load()" [disabled]="loading()">
+        <app-icon name="refresh" [size]="15" />刷新
+      </button>
+      <button
+        *appHasPermission="'system:user:create'"
+        mat-flat-button
+        type="button"
+        (click)="openCreate()"
+      >
+        新建用户
+      </button>
+    </div>
+  </header>
+
+  <mat-card appearance="outlined" class="admin-card">
+    <div class="admin-toolbar">
+      <input
+        placeholder="搜索用户名 / 姓名 / 工号"
+        (input)="onKeyword($event)"
+        (keydown.enter)="search()"
+      />
+      <select (change)="onDept($event)">
+        <option value="">全部科室</option>
+        @for (dept of departments(); track dept.id) {
+          <option [value]="dept.id">{{ dept.name }}</option>
+        }
+      </select>
+      <select (change)="onStatus($event)">
+        <option value="">全部状态</option>
+        <option value="ENABLED">启用</option>
+        <option value="DISABLED">停用</option>
+        <option value="LOCKED">锁定</option>
+      </select>
+      <button mat-button type="button" (click)="search()">查询</button>
+      <span class="spacer"></span>
+      <span class="mf-muted">共 {{ total() }} 条</span>
+    </div>
+
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    @if (error(); as error) {
+      <div class="admin-error" role="alert">
+        <app-icon name="alert" [size]="15" />
+        {{ error.message }} <code>{{ error.code }}</code>
+      </div>
+    }
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>用户</th>
+          <th>科室 / 职称</th>
+          <th>角色</th>
+          <th>状态</th>
+          <th>最近登录</th>
+          <th class="row-actions">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <td>
+              <div class="cell-main">
+                <strong>{{ user.realName }}</strong>
+                <small>{{ user.username }} · {{ user.employeeNo ?? '无工号' }}</small>
+              </div>
+            </td>
+            <td>
+              <div class="cell-main">
+                <span>{{ user.deptName }}</span>
+                <small>{{ user.title ?? '—' }}</small>
+              </div>
+            </td>
+            <td>
+              <div class="chip-row">
+                @for (role of user.roles; track role.id) {
+                  <span class="chip-mini">{{ role.name }}</span>
+                } @empty {
+                  <span class="mf-muted">未分配</span>
+                }
+              </div>
+            </td>
+            <td>
+              <span [class]="statusClass(user)">{{ statusLabel(user) }}</span>
+            </td>
+            <td>{{ user.lastLoginAt ? (user.lastLoginAt | date: 'MM-dd HH:mm') : '从未登录' }}</td>
+            <td>
+              <div class="row-actions">
+                <button
+                  *appHasPermission="'system:user:update'"
+                  mat-button
+                  type="button"
+                  (click)="openEdit(user)"
+                >
+                  编辑
+                </button>
+                <button
+                  *appHasPermission="'system:user:reset-password'"
+                  mat-button
+                  type="button"
+                  (click)="openResetPassword(user)"
+                >
+                  重置密码
+                </button>
+                <button
+                  *appHasPermission="'system:user:disable'"
+                  mat-button
+                  type="button"
+                  (click)="toggleStatus(user)"
+                >
+                  {{ user.status === 'ENABLED' || user.status === 'LOCKED' ? '停用' : '启用' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="empty-row">没有符合条件的用户</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="pager">
+      <span>第 {{ page() }} / {{ totalPages() }} 页</span>
+      <button mat-button type="button" (click)="prevPage()" [disabled]="page() <= 1">上一页</button>
+      <button mat-button type="button" (click)="nextPage()" [disabled]="page() >= totalPages()">
+        下一页
+      </button>
+    </div>
+  </mat-card>
+</div>

@@ -3,9 +3,34 @@ import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 
 import { DashboardPage } from './dashboard-page';
+import { AuthStore } from '../../../core/auth/auth.store';
+import type { UserProfile } from '../../../core/auth/auth.models';
 import { SystemStatusStore } from '../state/system-status.store';
 import type { MedflowError } from '../../../core/http/problem-detail';
 import type { ServiceState } from '../data/system.models';
+
+const PROFILE = {
+  id: 2,
+  username: 'doctor1',
+  realName: '张明',
+  deptId: 1,
+  deptName: '皮肤科',
+  title: '主任医师',
+  roles: [{ code: 'DOCTOR', name: '医生', dataScope: 'DEPT' }],
+  permissions: ['menu:dashboard', 'schedule:read'],
+  dataScope: 'DEPT',
+  menus: [],
+} as UserProfile;
+
+function authStub() {
+  return {
+    user: signal(PROFILE),
+    roles: signal(PROFILE.roles),
+    displayName: signal('张明'),
+    departmentName: signal('皮肤科'),
+    permissions: signal(new Set(PROFILE.permissions)),
+  } as unknown as AuthStore;
+}
 
 describe('DashboardPage', () => {
   const refresh = vi.fn();
@@ -25,7 +50,10 @@ describe('DashboardPage', () => {
     refresh.mockClear();
     await TestBed.configureTestingModule({
       imports: [DashboardPage],
-      providers: [{ provide: SystemStatusStore, useValue: store }],
+      providers: [
+        { provide: SystemStatusStore, useValue: store },
+        { provide: AuthStore, useValue: authStub() },
+      ],
     }).compileComponents();
   });
 
@@ -40,6 +68,8 @@ describe('DashboardPage', () => {
     expect(text).toContain('M1');
     expect(text).toContain('M6');
     expect(text).toContain('药房库存');
+    expect(text).toContain('张明');
+    expect(text).toContain('皮肤科');
   });
 
   it('should refresh when the primary action is clicked', async () => {
