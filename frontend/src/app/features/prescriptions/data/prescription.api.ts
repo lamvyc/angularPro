@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { type Observable } from 'rxjs';
 
+import type { PrescriptionReservation } from './prescription-reservation.model';
 import type {
   Drug,
   PrescriptionHeader,
@@ -26,6 +27,29 @@ export class PrescriptionApi {
       params = params.set('status', status);
     }
     return this.http.get<readonly PrescriptionHeader[]>('/api/v1/prescriptions', { params });
+  }
+
+  reservations(id: number): Observable<readonly PrescriptionReservation[]> {
+    return this.http.get<readonly PrescriptionReservation[]>(
+      `/api/v1/prescriptions/${id}/reservations`,
+    );
+  }
+
+  dispense(id: number): Observable<PrescriptionView> {
+    return this.http.post<PrescriptionView>(`/api/v1/prescriptions/${id}/dispense`, {});
+  }
+
+  returnStock(
+    id: number,
+    key: string,
+    reason: string,
+    lines: readonly { reservationId: number; quantity: number }[],
+  ): Observable<PrescriptionView> {
+    return this.http.post<PrescriptionView>(
+      `/api/v1/prescriptions/${id}/returns`,
+      { reason, lines },
+      { headers: new HttpHeaders({ 'Idempotency-Key': key }) },
+    );
   }
 
   detail(id: number): Observable<PrescriptionView> {

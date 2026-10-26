@@ -71,6 +71,12 @@
                   <button mat-button type="button" (click)="approve(prescription)">通过并预占</button>
                   <button mat-button type="button" (click)="reject(prescription)">驳回</button>
                 }
+                @if (prescription.status === 'APPROVED') {
+                  <button mat-button type="button" (click)="dispense(prescription)">发药</button>
+                }
+                @if (prescription.status === 'DISPENSED') {
+                  <button mat-button type="button" (click)="openReturn(prescription)">退药</button>
+                }
               </div>
             </td>
           </tr>

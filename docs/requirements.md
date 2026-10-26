@@ -121,6 +121,7 @@ MedFlow 以"一次完整的门诊就诊"为主线，把 **预约 → 签到 → 
 排班管理                   schedule:read（医生/护士/收费员；编辑需 schedule:manage）
 病历模板（ADMIN）           emr:template:manage
 药房审方                   pharmacy:review（药师）
+药房库存                   stock:read（药师；入库需 stock:manage）
 系统管理（ADMIN）
 ├── 用户管理                system:user:read
 ├── 角色权限                system:role:read

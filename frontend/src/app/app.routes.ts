@@ -62,6 +62,14 @@ export const routes: Routes = [
           import('./features/pharmacy/ui/pharmacy-page').then((module) => module.PharmacyPage),
       },
       {
+        path: 'pharmacy/inventory',
+        title: '药房库存 · MedFlow',
+        canActivate: [permissionGuard],
+        data: { permission: 'stock:read' },
+        loadComponent: () =>
+          import('./features/pharmacy/ui/inventory-page').then((module) => module.InventoryPage),
+      },
+      {
         path: 'schedules',
         title: '排班管理 · MedFlow',
         canActivate: [permissionGuard],

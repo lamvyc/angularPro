@@ -10,6 +10,7 @@ import { Icon } from '../../../shared/ui/icon/icon';
 import { PrescriptionApi } from '../../prescriptions/data/prescription.api';
 import type { PrescriptionHeader } from '../../prescriptions/data/prescription.models';
 import { ReasonDialog } from '../../prescriptions/ui/reason-dialog';
+import { ReturnDialog } from './return-dialog';
 
 @Component({
   selector: 'app-pharmacy-page',
@@ -36,11 +37,12 @@ export class PharmacyPage {
       submitted: this.api.list(undefined, 'SUBMITTED'),
       reviewing: this.api.list(undefined, 'UNDER_REVIEW'),
       approved: this.api.list(undefined, 'APPROVED'),
+      dispensed: this.api.list(undefined, 'DISPENSED'),
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: ({ submitted, reviewing, approved }) =>
-          this.prescriptions.set([...reviewing, ...submitted, ...approved]),
+        next: ({ submitted, reviewing, approved, dispensed }) =>
+          this.prescriptions.set([...reviewing, ...submitted, ...approved, ...dispensed]),
         error: (error: unknown) => this.error.set(toMedflowError(error)),
       });
   }
@@ -62,6 +64,29 @@ export class PharmacyPage {
         this.load();
       },
       error: (error: unknown) => this.error.set(toMedflowError(error)),
+    });
+  }
+
+  protected dispense(prescription: PrescriptionHeader): void {
+    this.api.dispense(prescription.id).subscribe({
+      next: () => {
+        this.message.set('发药成功，实库存与预占已同步扣减');
+        this.load();
+      },
+      error: (error: unknown) => this.error.set(toMedflowError(error)),
+    });
+  }
+
+  protected openReturn(prescription: PrescriptionHeader): void {
+    const ref = this.dialog.open(ReturnDialog, {
+      width: '640px',
+      data: { prescriptionId: prescription.id },
+    });
+    ref.afterClosed().subscribe((view) => {
+      if (view) {
+        this.message.set('退药完成，库存已回补');
+        this.load();
+      }
     });
   }
 
@@ -94,6 +119,8 @@ export class PharmacyPage {
         return '审核中';
       case 'APPROVED':
         return '已通过';
+      case 'DISPENSED':
+        return '已发药';
       default:
         return status;
     }

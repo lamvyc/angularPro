@@ -1,0 +1,149 @@
+<div class="mf-page">
+  <header class="admin-head">
+    <div>
+      <span class="mf-eyebrow">药房 · 库存</span>
+      <h1>药品与库存</h1>
+      <p>库存可用量 = 实库存 − 预占量，始终不小于 0；过期批次禁止入库，退药进入隔离区。</p>
+    </div>
+    <div class="admin-actions">
+      <button mat-stroked-button type="button" (click)="load()">
+        <app-icon name="refresh" [size]="15" />刷新
+      </button>
+      <button mat-stroked-button type="button" (click)="openDrug()">新建药品</button>
+      <button mat-flat-button type="button" (click)="openBatch()">批次入库</button>
+    </div>
+  </header>
+
+  @if (message(); as message) {
+    <div class="notice notice-success" role="status">
+      <app-icon name="check" [size]="16" />{{ message }}
+      <button mat-button type="button" (click)="clear()">知道了</button>
+    </div>
+  }
+  @if (error(); as error) {
+    <div class="notice notice-error" role="alert">
+      <app-icon name="alert" [size]="16" />{{ error.message }} <code>{{ error.code }}</code>
+      <button mat-button type="button" (click)="clear()">关闭</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  <div class="summary-grid">
+    @for (item of summary(); track item.drugId) {
+      <mat-card appearance="outlined" class="summary-card">
+        <span class="muted">{{ item.drugName }}</span>
+        <strong>{{ item.available }}</strong>
+        <small>可用 · 实存 {{ item.stockQty }} · 预占 {{ item.reservedQty }} · {{ item.batches }} 批</small>
+      </mat-card>
+    } @empty {
+      <p class="muted">暂无库存数据</p>
+    }
+  </div>
+
+  <mat-card appearance="outlined" class="admin-card">
+    <div class="section-title">药品目录</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>编码 / 名称</th>
+          <th>规格</th>
+          <th>类别</th>
+          <th>价格</th>
+          <th>状态</th>
+          <th class="row-actions">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (drug of drugs(); track drug.id) {
+          <tr>
+            <td>
+              <div class="cell-main">
+                <strong>{{ drug.name }}</strong>
+                <small class="mf-mono">{{ drug.code }} · {{ drug.genericName ?? '—' }}</small>
+              </div>
+            </td>
+            <td>{{ drug.spec }} / {{ drug.unit }}</td>
+            <td>{{ drug.category === 'HERBAL' ? '中药' : '西药' }} · {{ drug.prescriptionType }}</td>
+            <td>¥{{ drug.unitPrice }}</td>
+            <td>
+              <span [class]="drug.status === 'ENABLED' ? 'tag tag-success' : 'tag'">
+                {{ drug.status === 'ENABLED' ? '启用' : '停用' }}
+              </span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button mat-button type="button" (click)="openDrug(drug)">编辑</button>
+                <button mat-button type="button" (click)="toggleDrug(drug)">
+                  {{ drug.status === 'ENABLED' ? '停用' : '启用' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-row">暂无药品</td></tr>
+        }
+      </tbody>
+    </table>
+  </mat-card>
+
+  <mat-card appearance="outlined" class="admin-card">
+    <div class="section-title">库存批次（FEFO 顺序）</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>药品</th>
+          <th>批号</th>
+          <th>有效期</th>
+          <th>实存 / 预占 / 可用</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (batch of batches(); track batch.id) {
+          <tr>
+            <td>{{ batch.drugName }}</td>
+            <td class="mf-mono">{{ batch.batchNo }}</td>
+            <td>{{ batch.expiryDate }}</td>
+            <td>{{ batch.stockQty }} / {{ batch.reservedQty }} / <strong>{{ batch.available }}</strong></td>
+            <td><span class="tag">{{ batch.status }}</span></td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="empty-row">暂无批次</td></tr>
+        }
+      </tbody>
+    </table>
+  </mat-card>
+
+  <mat-card appearance="outlined" class="admin-card">
+    <div class="section-title">库存流水（最近 100 条）</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>流水号</th>
+          <th>药品 / 批次</th>
+          <th>类型</th>
+          <th>数量</th>
+          <th>可用量变化</th>
+          <th>时间</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (movement of movements(); track movement.id) {
+          <tr>
+            <td class="mf-mono">{{ movement.movementNo }}</td>
+            <td>{{ movement.drugName }} · {{ movement.batchNo }}</td>
+            <td>{{ movementLabel(movement.type) }}</td>
+            <td>{{ movement.quantity }}</td>
+            <td>{{ movement.beforeQty }} → {{ movement.afterQty }}</td>
+            <td>{{ movement.createdAt }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty-row">暂无流水</td></tr>
+        }
+      </tbody>
+    </table>
+  </mat-card>
+</div>
