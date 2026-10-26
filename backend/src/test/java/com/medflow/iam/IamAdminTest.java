@@ -121,9 +121,11 @@ class IamAdminTest extends AbstractIntegrationTest {
         long deptId = createDepartment("M1DEPT");
         long roleId = createRole("M1TEST", "M1 测试角色", "ALL");
         long userId = createUser("m1status", deptId, roleId);
+        String existingToken = tokenFor("m1status", "Medflow@2026");
 
         assertThat(api.patch("/api/v1/users/%d/status".formatted(userId),
                 Map.of("status", "DISABLED"), adminToken).status()).isEqualTo(204);
+        assertThat(api.get("/api/v1/auth/me", existingToken).status()).isEqualTo(401);
         assertThat(api.login("m1status", "Medflow@2026").status()).isEqualTo(403);
 
         assertThat(api.patch("/api/v1/users/%d/status".formatted(userId),

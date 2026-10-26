@@ -23,7 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * 安全基线：无状态 Bearer Token、统一 401/403 Problem Details。
- * 登录与 JWT 过滤器在 M1 接入，本阶段所有 /api/v1 业务接口默认返回 401。
+ * JWT 过滤器负责认证，方法级 @PreAuthorize 负责权限；未携带令牌的业务接口返回 401。
  */
 @Configuration(proxyBeanMethods = false)
 @EnableMethodSecurity
@@ -63,7 +63,8 @@ public class SecurityConfig {
     }
 
     /**
-     * M1 将替换为数据库实现。此处显式提供空实现，避免 Spring Boot 生成随机默认用户。
+     * 认证由 AuthAppService + JWT 完成。保留空实现以避免 Spring Boot 生成随机默认用户；
+     * 不要在此处添加演示账号。
      */
     @Bean
     public UserDetailsService userDetailsService() {
