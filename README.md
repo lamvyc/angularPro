@@ -170,7 +170,7 @@ cd backend && ./mvnw verify
 | 项目 | 命令 / 方式 | 结果 |
 | --- | --- | --- |
 | 前端静态检查 | `pnpm --filter medflow-web lint` | 0 error |
-| 前端单元测试 | `pnpm --filter medflow-web test` | 16 个文件 / 31 个用例通过 |
+| 前端单元测试 | `pnpm --filter medflow-web test` | 16 个文件 / 32 个用例通过 |
 | 前端生产构建 | `pnpm --filter medflow-web build` | 成功，初始包 ≈ 315 kB（未压缩） |
 | 后端单元 + 架构 + 集成测试 | `cd backend && ./mvnw verify` | 36 个用例通过（Testcontainers 真实 MySQL/Redis） |
 | 本地依赖健康 | `docker compose ps` | MySQL / Redis 均 healthy |

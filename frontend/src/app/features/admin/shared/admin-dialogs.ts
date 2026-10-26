@@ -47,18 +47,18 @@ export type UserEditorResult =
         <div class="two-col">
           <mat-form-field appearance="outline">
             <mat-label>用户名</mat-label>
-            <input matInput [formField]="editor.username" />
+            <input id="user-username" matInput [formField]="editor.username" />
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>姓名</mat-label>
-            <input matInput [formField]="editor.realName" />
+            <input id="user-real-name" matInput [formField]="editor.realName" />
           </mat-form-field>
         </div>
 
         @if (!data.user) {
           <mat-form-field appearance="outline">
             <mat-label>初始密码</mat-label>
-            <input matInput type="password" [formField]="editor.password" />
+            <input id="user-password" matInput type="password" [formField]="editor.password" />
             @if (editor.password().touched() && editor.password().invalid()) {
               <mat-hint class="hint-error">密码至少 8 位</mat-hint>
             }
@@ -68,18 +68,18 @@ export type UserEditorResult =
         <div class="two-col">
           <mat-form-field appearance="outline">
             <mat-label>工号</mat-label>
-            <input matInput [formField]="editor.employeeNo" />
+            <input id="user-employee-no" matInput [formField]="editor.employeeNo" />
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>职称</mat-label>
-            <input matInput [formField]="editor.title" />
+            <input id="user-title" matInput [formField]="editor.title" />
           </mat-form-field>
         </div>
 
         <div class="two-col">
           <mat-form-field appearance="outline">
             <mat-label>科室</mat-label>
-            <select matNativeControl [formField]="editor.deptId">
+            <select id="user-dept" matNativeControl [formField]="editor.deptId">
               <option value="">请选择科室</option>
               @for (dept of data.departments; track dept.id) {
                 <option [value]="dept.id">{{ dept.name }}</option>
@@ -88,7 +88,7 @@ export type UserEditorResult =
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>手机号</mat-label>
-            <input matInput [formField]="editor.phone" />
+            <input id="user-phone" matInput [formField]="editor.phone" />
           </mat-form-field>
         </div>
 

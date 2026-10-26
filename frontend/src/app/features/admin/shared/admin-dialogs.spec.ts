@@ -134,3 +134,95 @@ describe('UserEditorDialog (edit)', () => {
     });
   });
 });
+
+describe('UserEditorDialog (create payload)', () => {
+  const close = vi.fn();
+
+  beforeEach(async () => {
+    await TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [UserEditorDialog],
+      providers: [
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: {
+            departments: [
+              {
+                id: 1,
+                code: 'DERM',
+                name: '皮肤科',
+                parentId: null,
+                type: 'CLINICAL',
+                status: 'ENABLED',
+                sortNo: 10,
+              },
+            ],
+            roles: [
+              {
+                id: 2,
+                code: 'DOCTOR',
+                name: '医生',
+                dataScope: 'DEPT',
+                builtIn: true,
+                status: 'ENABLED',
+                remark: null,
+                permissionIds: [],
+              },
+            ],
+          },
+        },
+        { provide: MatDialogRef, useValue: { close } },
+      ],
+    }).compileComponents();
+    close.mockClear();
+  });
+
+  it('should bind inputs/select and submit create payload', async () => {
+    const fixture = TestBed.createComponent(UserEditorDialog);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+
+    const fill = (id: string, value: string): void => {
+      const input = element.querySelector<HTMLInputElement>(`#${id}`);
+      if (!input) {
+        throw new Error(`missing input ${id}`);
+      }
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    fill('user-username', 'newdoctor');
+    fill('user-password', 'NewPass@2026');
+    fill('user-real-name', '新医生');
+    fill('user-employee-no', 'D9001');
+    fill('user-title', '住院医师');
+    fill('user-phone', '13900000009');
+
+    const select = element.querySelector<HTMLSelectElement>('#user-dept');
+    select!.value = '1';
+    select!.selectedIndex = 1;
+    select!.dispatchEvent(new Event('input', { bubbles: true }));
+    select!.dispatchEvent(new Event('change', { bubbles: true }));
+
+    element.querySelector<HTMLInputElement>('mat-checkbox input')?.click();
+    await fixture.whenStable();
+
+    Array.from(element.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.textContent?.includes('保存'))
+      ?.click();
+    await fixture.whenStable();
+
+    expect(close).toHaveBeenCalledWith({
+      mode: 'create',
+      payload: {
+        username: 'newdoctor',
+        password: 'NewPass@2026',
+        realName: '新医生',
+        employeeNo: 'D9001',
+        deptId: 1,
+        title: '住院医师',
+        phone: '13900000009',
+        roleIds: [2],
+      },
+    });
+  });
+});
