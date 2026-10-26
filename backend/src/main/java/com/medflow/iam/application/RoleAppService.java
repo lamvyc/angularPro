@@ -6,6 +6,7 @@ import java.util.Map;
 import com.medflow.auth.application.PrincipalService;
 import com.medflow.common.error.BusinessException;
 import com.medflow.common.error.ErrorCode;
+import com.medflow.common.security.DataScope;
 import com.medflow.iam.domain.PermissionRepository;
 import com.medflow.iam.domain.RoleInfo;
 import com.medflow.iam.domain.RoleRepository;
@@ -51,6 +52,9 @@ public class RoleAppService {
     @Transactional
     public RoleView update(long roleId, UpdateRoleCommand command) {
         RoleInfo before = requireRole(roleId);
+        if ("ADMIN".equals(before.code()) && command.dataScope() != DataScope.ALL) {
+            throw new BusinessException(ErrorCode.IAM_PROTECTED, "内置管理员角色的数据范围必须保持 ALL");
+        }
         roleRepository.update(roleId, command.name().trim(), command.dataScope(), command.remark());
         roleRepository.findUserIds(roleId).forEach(principalService::evict);
         auditService.success("ROLE_UPDATED", "ROLE", String.valueOf(roleId),

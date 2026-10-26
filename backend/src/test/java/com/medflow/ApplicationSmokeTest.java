@@ -8,52 +8,17 @@ import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.mysql.MySQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 端到端骨架测试：真实 MySQL + Redis，验证 Flyway、安全基线、Problem Details 与公开探针。
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@Testcontainers
-class ApplicationSmokeTest {
-
-    private static final DockerImageName MYSQL_IMAGE = DockerImageName.parse("mysql:8.4");
-    private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:8-alpine");
-
-    @Container
-    static final MySQLContainer MYSQL = new MySQLContainer(MYSQL_IMAGE)
-            .withDatabaseName("medflow")
-            .withUsername("medflow")
-            .withPassword("medflow");
-
-    @Container
-    static final GenericContainer<?> REDIS = new GenericContainer<>(REDIS_IMAGE)
-            .withExposedPorts(6379)
-            .withCommand("redis-server", "--appendonly", "no");
+class ApplicationSmokeTest extends AbstractIntegrationTest {
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
-
-    @DynamicPropertySource
-    static void registerContainerProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
-        registry.add("spring.datasource.username", MYSQL::getUsername);
-        registry.add("spring.datasource.password", MYSQL::getPassword);
-        registry.add("spring.data.redis.host", REDIS::getHost);
-        registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
-    }
 
     @Value("${local.server.port}")
     private int port;

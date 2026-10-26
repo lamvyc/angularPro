@@ -146,6 +146,11 @@ class IamAdminTest extends AbstractIntegrationTest {
                 Map.of("permissionIds", List.of(1, 3, 4)), adminToken);
         assertThat(adminRole.status()).isEqualTo(409);
         assertThat(adminRole.body().path("code").asString()).isEqualTo("MED-IAM-001");
+
+        var adminScope = api.put("/api/v1/roles/1",
+                Map.of("name", "系统管理员", "dataScope", "SELF"), adminToken);
+        assertThat(adminScope.status()).isEqualTo(409);
+        assertThat(adminScope.body().path("code").asString()).isEqualTo("MED-IAM-001");
     }
 
     @Test
@@ -156,6 +161,10 @@ class IamAdminTest extends AbstractIntegrationTest {
         assertThat(api.get("/api/v1/roles", doctorToken).status()).isEqualTo(403);
         assertThat(api.get("/api/v1/audit-logs", doctorToken).status()).isEqualTo(403);
         assertThat(api.get("/api/v1/departments", doctorToken).status()).isEqualTo(200);
+
+        var audit = api.get("/api/v1/audit-logs?action=ACCESS_DENIED&size=20", adminToken);
+        assertThat(audit.status()).isEqualTo(200);
+        assertThat(audit.rawBody()).contains("ACCESS_DENIED", "张明", "/api/v1/users");
     }
 
     @Test

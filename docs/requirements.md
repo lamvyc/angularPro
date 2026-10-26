@@ -114,25 +114,15 @@ MedFlow 以"一次完整的门诊就诊"为主线，把 **预约 → 签到 → 
 
 ```text
 工作台                     （所有角色）
-├── 今日概览                dashboard
-临床业务
-├── 候诊队列                encounter:read
-├── 患者管理                patient:read
-├── 预约挂号                appointment:read
-├── 排班管理                schedule:read（编辑按钮需 schedule:manage）
-├── 处方管理                prescription:read
-各科室
-├── 药房审方                pharmacy:review
-├── 库存管理                stock:read
-收费
-├── 收费与退费              charge:read
+科室人员                   schedule:read（医生/护士/收费员）
+科室管理（只读）           system:dept:read（所有角色；编辑按钮需 system:dept:manage）
 系统管理（ADMIN）
 ├── 用户管理                system:user:read
 ├── 角色权限                system:role:read
-├── 科室管理                system:dept:read
-├── 病历模板                emr:template:manage
 └── 审计日志                system:audit:read
 ```
+
+后续模块会按同一模式追加「临床业务」「药房」「收费」等菜单：菜单权限由后端 `sys_permission` 驱动，前端不硬编码角色。
 
 后端 `GET /api/v1/auth/me` 返回当前用户、角色、权限码、数据范围与菜单树；菜单树由**权限表**按角色过滤生成，前端不硬编码角色。
 

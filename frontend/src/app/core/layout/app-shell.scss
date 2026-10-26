@@ -251,6 +251,19 @@
   border-left: 1px solid var(--mf-border);
 }
 
+.logout {
+  margin-left: 2px;
+  font-size: 12px;
+  color: var(--mf-muted);
+}
+
+.nav-empty {
+  padding: 14px 12px;
+  color: var(--mf-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .avatar {
   display: grid;
   place-items: center;
@@ -317,6 +330,10 @@
 
   .user {
     padding-left: 8px;
+  }
+
+  .logout {
+    display: none;
   }
 
   .footer {

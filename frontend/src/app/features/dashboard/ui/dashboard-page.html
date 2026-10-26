@@ -1,11 +1,11 @@
 <div class="mf-page dashboard">
   <section class="hero">
     <div class="hero-copy">
-      <span class="mf-eyebrow">P0 · 基础工程已完成</span>
+      <span class="mf-eyebrow">M1 · 权限体系已上线</span>
       <h1>门诊诊疗，一处闭环</h1>
       <p>
-        从预约、接诊、病历到审方发药，MedFlow 用真实的状态机、并发控制与审计链路还原门诊业务，
-        而不是一组孤立的 CRUD 页面。
+        登录、角色、菜单、按钮与接口权限已经闭环。医生只能看到本科室，药师能审方但不能改病历，
+        管理员的每一次授权都会写入审计。
       </p>
       <div class="hero-actions">
         <button
@@ -32,26 +32,26 @@
       </p>
     </div>
 
-    <aside class="hero-panel" aria-label="工程信息">
+    <aside class="hero-panel" aria-label="当前用户">
       <div class="panel-row">
-        <span>当前阶段</span>
-        <strong>P0 / M1 准备中</strong>
+        <span>当前用户</span>
+        <strong>{{ auth.displayName() }}</strong>
       </div>
       <div class="panel-row">
-        <span>前端</span>
-        <strong>Angular 22.2 · Material 22</strong>
+        <span>科室</span>
+        <strong>{{ auth.departmentName() }}</strong>
       </div>
       <div class="panel-row">
-        <span>后端</span>
-        <strong>Spring Boot 4.1.2 · Java 21</strong>
+        <span>角色</span>
+        <strong>{{ auth.roles()[0]?.name ?? '—' }}</strong>
       </div>
       <div class="panel-row">
-        <span>数据层</span>
-        <strong>MySQL 8.4 · Redis 8 · Flyway</strong>
+        <span>数据范围</span>
+        <strong>{{ dataScopeLabel() }}</strong>
       </div>
       <div class="panel-row">
-        <span>测试</span>
-        <strong>Vitest 5 · JUnit 5 · Testcontainers</strong>
+        <span>权限点</span>
+        <strong>{{ auth.permissions().size }} 项</strong>
       </div>
     </aside>
   </section>
@@ -106,7 +106,7 @@
       <mat-card-header>
         <div mat-card-avatar class="card-icon"><app-icon name="check" [size]="19" /></div>
         <mat-card-title>本阶段交付</mat-card-title>
-        <mat-card-subtitle>设计先行，基础工程可启动、可构建、可测试</mat-card-subtitle>
+        <mat-card-subtitle>M1 交付：认证、RBAC、数据隔离、审计与后台</mat-card-subtitle>
       </mat-card-header>
 
       <mat-card-content>
@@ -121,8 +121,8 @@
 
         <div class="next-stage">
           <span class="mf-eyebrow">下一阶段</span>
-          <strong>M1 · 登录与权限体系</strong>
-          <p>JWT + 刷新令牌、菜单/按钮/接口权限、科室数据隔离与审计查询。</p>
+          <strong>M2 · 预约挂号</strong>
+          <p>排班号源、原子扣减防超卖、重复预约拦截、退号退款与签到。</p>
         </div>
       </mat-card-content>
     </mat-card>
@@ -144,7 +144,9 @@
                 <p>{{ item.description }}</p>
               </div>
               <span class="phase-state">
-                @if (item.status === 'next') {
+                @if (item.status === 'done') {
+                  已上线
+                } @else if (item.status === 'next') {
                   下一阶段
                 } @else {
                   计划中

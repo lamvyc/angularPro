@@ -16,39 +16,30 @@
     <mat-divider />
 
     <nav class="nav" aria-label="主导航">
-      @for (section of navSections; track section.title) {
+      @for (group of navGroups(); track group.title) {
         <div class="nav-section">
-          <p class="nav-title">{{ section.title }}</p>
-          @for (item of section.items; track item.label) {
-            @if (item.disabled) {
-              <div class="nav-item is-disabled" aria-disabled="true">
-                <app-icon [name]="item.icon" [size]="18" />
-                <span class="label">{{ item.label }}</span>
-                <span class="badge">{{ item.badge }}</span>
-              </div>
-            } @else {
-              <a
-                class="nav-item"
-                [routerLink]="item.route"
-                routerLinkActive="is-active"
-                [routerLinkActiveOptions]="{ exact: true }"
-                (click)="closeOnNavigate()"
-              >
-                <app-icon [name]="item.icon" [size]="18" />
-                <span class="label">{{ item.label }}</span>
-                @if (item.badge) {
-                  <span class="badge">{{ item.badge }}</span>
-                }
-              </a>
-            }
+          <p class="nav-title">{{ group.title }}</p>
+          @for (item of group.items; track item.route) {
+            <a
+              class="nav-item"
+              [routerLink]="item.route"
+              routerLinkActive="is-active"
+              (click)="closeOnNavigate()"
+            >
+              <app-icon [name]="item.icon" [size]="18" />
+              <span class="label">{{ item.label }}</span>
+            </a>
           }
         </div>
+      }
+      @if (navGroups().length === 0) {
+        <p class="nav-empty">暂无可用菜单，请联系管理员授权。</p>
       }
     </nav>
 
     <div class="sidenav-foot">
-      <span class="version">v0.1.0 · P0</span>
-      <span class="foot-note">全部数据为合成演示数据</span>
+      <span class="version">v0.1.0 · M1</span>
+      <span class="foot-note">登录、RBAC、数据隔离与审计</span>
     </div>
   </mat-sidenav>
 
@@ -60,8 +51,8 @@
         </button>
 
         <div class="titles">
-          <span class="crumb">MedFlow / 演示环境</span>
-          <strong>门诊诊疗管理平台</strong>
+          <span class="crumb">MedFlow / 门诊诊疗</span>
+          <strong>今日工作台</strong>
         </div>
 
         <div class="actions">
@@ -76,11 +67,12 @@
             <span class="status-text">{{ statusLabel() }}</span>
           </span>
           <div class="user">
-            <span class="avatar">M</span>
+            <span class="avatar">{{ auth.initials() }}</span>
             <span class="user-copy">
-              <strong>未登录</strong>
-              <small>M1 接入鉴权</small>
+              <strong>{{ auth.displayName() }}</strong>
+              <small>{{ auth.departmentName() }} · {{ roleLabel() }}</small>
             </span>
+            <button mat-button type="button" class="logout" (click)="logout()">退出</button>
           </div>
         </div>
       </header>
@@ -90,7 +82,7 @@
       </main>
 
       <footer class="footer">
-        <span>MedFlow · P0 基础工程 · Angular 22 + Spring Boot 4</span>
+        <span>MedFlow · M1 权限体系 · Angular 22 + Spring Boot 4</span>
         <span>不包含真实患者信息</span>
       </footer>
     </div>

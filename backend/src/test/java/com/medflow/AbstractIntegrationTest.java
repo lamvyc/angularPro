@@ -5,8 +5,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -15,10 +13,8 @@ import org.testcontainers.utility.DockerImageName;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Testcontainers
 public abstract class AbstractIntegrationTest {
 
-    @Container
     static final MySQLContainer MYSQL = new MySQLContainer(DockerImageName.parse("mysql:8.4"))
             .withDatabaseName("medflow")
             .withUsername("medflow")
@@ -26,10 +22,15 @@ public abstract class AbstractIntegrationTest {
             .withUrlParam("connectionTimeZone", "Asia/Shanghai")
             .withUrlParam("forceConnectionTimeZoneToSession", "true");
 
-    @Container
     static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:8-alpine"))
             .withExposedPorts(6379)
             .withCommand("redis-server", "--appendonly", "no");
+
+    static {
+        // 单例容器：所有测试类共享，避免每个类重启 MySQL 导致连接失效。
+        MYSQL.start();
+        REDIS.start();
+    }
 
     @DynamicPropertySource
     static void registerContainerProperties(DynamicPropertyRegistry registry) {

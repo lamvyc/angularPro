@@ -476,11 +476,12 @@ CONSTRAINT chk_batch_qty CHECK (stock_qty >= 0 AND reserved_qty >= 0 AND reserve
 | --- | --- | --- | --- |
 | V1 | `V1__infrastructure.sql` | `sys_audit_log`、`sys_idempotency_record`、`sys_sequence`、`outbox_event` | P0（本阶段） |
 | V2 | `V2__iam.sql` | 科室/用户/角色/权限/关联表 + 内置角色与管理员账号 | M1 |
-| V3 | `V3__patient_appointment.sql` | 患者、排班、号源、预约、收费、退款 | M2 |
-| V4 | `V4__encounter.sql` | 就诊、诊断、就诊事件 | M3 |
-| V5 | `V5__emr.sql` | 模板、模板版本、病历、病历版本 + 演示模板 | M4 |
-| V6 | `V6__prescription.sql` | 处方、明细、修订、审核、事件 | M5 |
-| V7 | `V7__pharmacy.sql` | 药品、批次、预占、流水 + 演示药品 | M6 |
+| V3 | `V3__iam_menu_adjust.sql` | 科室管理调整为一级只读菜单 | M1 |
+| V4 | `V4__patient_appointment.sql` | 患者、排班、号源、预约、收费、退款 | M2 |
+| V5 | `V5__encounter.sql` | 就诊、诊断、就诊事件 | M3 |
+| V6 | `V6__emr.sql` | 模板、模板版本、病历、病历版本 + 演示模板 | M4 |
+| V7 | `V7__prescription.sql` | 处方、明细、修订、审核、事件 | M5 |
+| V8 | `V8__pharmacy.sql` | 药品、批次、预占、流水 + 演示药品 | M6 |
 | R | `db/seed/R__demo_seed.sql` | 仅 dev/local 启用的合成演示数据 | 各阶段 |
 
 规则：
