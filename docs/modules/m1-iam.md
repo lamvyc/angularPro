@@ -6,7 +6,7 @@
 | 对应需求 | FR-M1-01 ~ FR-M1-11 |
 | 后端 | Spring Security 7 + JWT + Redis 刷新令牌 + MyBatis-Plus |
 | 前端 | Angular 22 Signals + AuthStore + 单飞刷新拦截器 + 动态菜单 |
-| 测试 | 后端 36 个用例（含 Testcontainers）、前端 28 个用例 |
+| 测试 | 后端 36 个用例（含 Testcontainers）、前端 31 个用例 |
 
 ## 1. 交付范围
 
@@ -164,7 +164,7 @@ features/admin/*        # 用户 / 角色 / 科室 / 审计
 | RBAC/范围 | `RbacScopeTest` | 6/6：本科室、跨科室 403、管理员无临床权限、权限树 |
 | 管理后台 | `IamAdminTest` | 7/7：建科室/角色/用户、缓存失效、停用/重置密码、审计、越权审计 |
 | 库表与种子 | `IamSchemaTest` | 6/6：V2、5 角色、权限、BCrypt、锁定列 |
-| 前端 | `pnpm --filter medflow-web test` | 28 个用例通过 |
+| 前端 | `pnpm --filter medflow-web test` | 31 个用例通过 |
 | 构建 | `pnpm --filter medflow-web build` | 成功 |
 
 手工 API 验证（本地 Compose）：
