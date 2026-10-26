@@ -116,6 +116,7 @@ MedFlow 以"一次完整的门诊就诊"为主线，把 **预约 → 签到 → 
 工作台                     （所有角色）
 科室人员                   schedule:read（医生/护士/收费员）
 科室管理（只读）           system:dept:read（所有角色；编辑按钮需 system:dept:manage）
+医生工作站                 encounter:read（医生/护士）
 预约挂号                   appointment:read（医生/护士/收费员）
 排班管理                   schedule:read（医生/护士/收费员；编辑需 schedule:manage）
 系统管理（ADMIN）

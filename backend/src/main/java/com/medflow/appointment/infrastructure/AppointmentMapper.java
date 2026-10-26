@@ -148,7 +148,8 @@ public interface AppointmentMapper {
 
     @Select("""
             SELECT id, schedule_id AS scheduleId, seq_no AS seqNo, start_time AS startTime,
-                   end_time AS endTime, capacity, booked_count AS bookedCount, status
+                   end_time AS endTime, capacity, booked_count AS bookedCount,
+                   capacity - booked_count AS available, status
             FROM schedule_slot WHERE schedule_id = #{scheduleId} ORDER BY seq_no
             """)
     List<ScheduleSlot> listSlots(long scheduleId);
@@ -199,6 +200,9 @@ public interface AppointmentMapper {
                     #{appointmentDate}, #{period}, #{seqNo}, #{status}, #{source}, #{bookedBy}, #{bookedBy})
             """)
     int insertAppointment(NewAppointment appointment);
+
+    @Update("UPDATE doctor_schedule SET next_seq = LAST_INSERT_ID(next_seq + 1) WHERE id = #{scheduleId}")
+    int bumpScheduleSeq(long scheduleId);
 
     @Select("""
             SELECT

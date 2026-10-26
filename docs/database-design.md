@@ -478,7 +478,7 @@ CONSTRAINT chk_batch_qty CHECK (stock_qty >= 0 AND reserved_qty >= 0 AND reserve
 | V2 | `V2__iam.sql` | 科室/用户/角色/权限/关联表 + 内置角色与管理员账号 | M1 |
 | V3 | `V3__iam_menu_adjust.sql` | 科室管理调整为一级只读菜单 | M1 |
 | V4 | `V4__patient_appointment.sql` | 患者、排班、号源、预约、收费、退款、encounter 基础表 + 预约/排班菜单 | M2 |
-| V5 | `V5__encounter_detail.sql` | 诊断、就诊事件（encounter 已在 V4） | M3 |
+| V5 | `V5__encounter_detail.sql` | 诊断、就诊事件、病历草稿、排班原子序号、工作站菜单 | M3 |
 | V6 | `V6__emr.sql` | 模板、模板版本、病历、病历版本 + 演示模板 | M4 |
 | V7 | `V7__prescription.sql` | 处方、明细、修订、审核、事件 | M5 |
 | V8 | `V8__pharmacy.sql` | 药品、批次、预占、流水 + 演示药品 | M6 |

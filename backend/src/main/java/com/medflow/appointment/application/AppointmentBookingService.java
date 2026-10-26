@@ -61,7 +61,7 @@ public class AppointmentBookingService {
         try {
             appointmentId = repository.insertAppointment(new NewAppointment(
                     numbers.next("AP"), patientId, slot.deptId(), slot.doctorId(), slot.scheduleId(),
-                    slotId, slot.scheduleDate(), slot.period(), nextSeq(slotId), "BOOKED",
+                    slotId, slot.scheduleDate(), slot.period(), (int) repository.nextScheduleSeq(slot.scheduleId()), "BOOKED",
                     source == null ? "WINDOW" : source, user.id()));
         } catch (DuplicateKeyException ex) {
             throw new BusinessException(ErrorCode.SLOT_DUPLICATE);
@@ -72,9 +72,5 @@ public class AppointmentBookingService {
         auditService.success("APPOINTMENT_BOOKED", "APPOINTMENT", String.valueOf(appointmentId), null,
                 java.util.Map.of("patientId", patientId, "slotId", slotId, "chargeId", chargeId));
         return repository.findAppointment(appointmentId).orElseThrow();
-    }
-
-    private int nextSeq(long slotId) {
-        return repository.findSlotBooking(slotId).map(SlotBookingInfo::bookedCount).orElse(1);
     }
 }

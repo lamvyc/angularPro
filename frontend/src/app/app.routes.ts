@@ -44,6 +44,16 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'workstation',
+        title: '医生工作站 · MedFlow',
+        canActivate: [permissionGuard],
+        data: { permission: 'encounter:read' },
+        loadComponent: () =>
+          import('./features/workstation/ui/workstation-page').then(
+            (module) => module.WorkstationPage,
+          ),
+      },
+      {
         path: 'schedules',
         title: '排班管理 · MedFlow',
         canActivate: [permissionGuard],

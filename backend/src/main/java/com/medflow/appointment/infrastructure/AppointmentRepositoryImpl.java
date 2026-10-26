@@ -123,6 +123,12 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     }
 
     @Override
+    public long nextScheduleSeq(long scheduleId) {
+        mapper.bumpScheduleSeq(scheduleId);
+        return mapper.lastInsertId();
+    }
+
+    @Override
     public Optional<AppointmentView> findAppointment(long id) {
         return mapper.findAppointment(id);
     }

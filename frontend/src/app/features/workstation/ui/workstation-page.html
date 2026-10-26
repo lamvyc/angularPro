@@ -1,0 +1,195 @@
+<div class="mf-page">
+  <header class="admin-head">
+    <div>
+      <span class="mf-eyebrow">医生 · 工作站</span>
+      <h1>候诊与接诊</h1>
+      <p>接诊后自动创建病历草稿；编辑 2 秒后自动保存，版本冲突会提示重新加载。</p>
+    </div>
+    <div class="admin-actions">
+      <input type="date" class="date-filter" [value]="store.queueDate()" (change)="setDate($event)" />
+      <button mat-stroked-button type="button" (click)="store.loadQueue()">
+        <app-icon name="refresh" [size]="15" />刷新队列
+      </button>
+    </div>
+  </header>
+
+  @if (store.message(); as message) {
+    <div class="notice notice-success" role="status">
+      <app-icon name="check" [size]="16" />{{ message }}
+      <button mat-button type="button" (click)="store.clearNotice()">知道了</button>
+    </div>
+  }
+  @if (store.error(); as error) {
+    <div class="notice notice-error" role="alert">
+      <app-icon name="alert" [size]="16" />{{ error.message }} <code>{{ error.code }}</code>
+      <button mat-button type="button" (click)="store.clearNotice()">关闭</button>
+    </div>
+  }
+  @if (store.conflict()) {
+    <div class="notice notice-error" role="alert">
+      <app-icon name="alert" [size]="16" />病历已被其他窗口更新，请重新加载后再合并。
+      <button mat-button type="button" (click)="store.reloadDetail()">重新加载</button>
+    </div>
+  }
+
+  <div class="workstation-grid">
+    <mat-card appearance="outlined" class="admin-card queue-card">
+      @if (store.loadingQueue()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+      <div class="queue-head">
+        <strong>候诊队列</strong>
+        <span class="muted">{{ store.queue().length }} 人</span>
+      </div>
+      <div class="queue-list">
+        @for (encounter of store.queue(); track encounter.id) {
+          <button
+            type="button"
+            class="queue-item"
+            [class.selected]="store.selectedId() === encounter.id"
+            (click)="store.select(encounter.id)"
+          >
+            <span class="queue-seq">{{ encounter.seqNo }}</span>
+            <span class="queue-main">
+              <strong>{{ encounter.patientName }}</strong>
+              <small>{{ encounter.patientNo }} · {{ encounter.period === 'AM' ? '上午' : '下午' }}</small>
+            </span>
+            <span [class]="statusClass(encounter.status)">{{ statusLabel(encounter.status) }}</span>
+          </button>
+        } @empty {
+          <p class="empty-hint">当前日期暂无候诊患者</p>
+        }
+      </div>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="admin-card detail-card">
+      @if (store.loadingDetail()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+      @if (store.detail(); as detail) {
+        <div class="patient-head">
+          <div>
+            <div class="patient-title">
+              <h2>{{ detail.encounter.patientName }}</h2>
+              <span [class]="statusClass(detail.encounter.status)">
+                {{ statusLabel(detail.encounter.status) }}
+              </span>
+            </div>
+            <p class="muted">
+              {{ detail.encounter.patientNo }} · {{ detail.encounter.deptName }} ·
+              {{ detail.encounter.doctorName }} · {{ detail.encounter.appointmentDate }}
+              {{ detail.encounter.period === 'AM' ? '上午' : '下午' }} {{ detail.encounter.seqNo }} 号
+            </p>
+          </div>
+          @if (detail.encounter.status === 'WAITING') {
+            <button
+              *appHasPermission="'encounter:start'"
+              mat-flat-button
+              type="button"
+              (click)="store.start()"
+              [disabled]="store.saving()"
+            >
+              开始接诊
+            </button>
+          }
+        </div>
+
+        @if (store.conflict()) {
+          <div class="conflict-box">当前版本已过期，请点击上方「重新加载」。</div>
+        }
+
+        @if (store.draftAvailable()) {
+          <div class="draft-box">
+            <app-icon name="database" [size]="16" />
+            发现 Redis 中的较新草稿
+            <button mat-button type="button" (click)="store.restoreDraft()">恢复草稿</button>
+          </div>
+        }
+
+        @if (detail.encounter.status === 'IN_PROGRESS') {
+          <div class="emr-head">
+            <span class="block-label">电子病历草稿 · v{{ detail.emr?.version ?? 0 }}</span>
+            <span class="muted">
+              @if (store.saving()) {
+                保存中…
+              } @else if (store.lastSavedAt(); as savedAt) {
+                已保存 {{ savedAt }}
+              } @else {
+                修改后 2 秒自动保存
+              }
+            </span>
+          </div>
+          <div class="emr-grid">
+            @for (field of fields; track field.key) {
+              <label class="emr-field" [class.full]="field.key === 'presentIllness' || field.key === 'treatmentPlan'">
+                <span>{{ field.label }}</span>
+                <textarea
+                  rows="2"
+                  [placeholder]="field.placeholder"
+                  [value]="store.content()[field.key]"
+                  (input)="store.updateField(field.key, $event)"
+                ></textarea>
+              </label>
+            }
+          </div>
+
+          <div class="diagnosis-head">
+            <span class="block-label">诊断（必须一条主诊断）</span>
+            <button mat-button type="button" (click)="store.addDiagnosis()">添加诊断</button>
+          </div>
+          <div class="diagnosis-list">
+            @for (diagnosis of store.diagnoses(); track diagnosis.key; let i = $index) {
+              <div class="diagnosis-row">
+                <input placeholder="编码" [value]="diagnosis.code" (input)="store.updateDiagnosis(i, 'code', $event)" />
+                <input placeholder="诊断名称" [value]="diagnosis.name" (input)="store.updateDiagnosis(i, 'name', $event)" />
+                <select [value]="diagnosis.type" (change)="store.updateDiagnosis(i, 'type', $event)">
+                  <option value="PRIMARY">主诊断</option>
+                  <option value="SECONDARY">次诊断</option>
+                </select>
+                <input placeholder="备注" [value]="diagnosis.note" (input)="store.updateDiagnosis(i, 'note', $event)" />
+                <button mat-button type="button" (click)="store.removeDiagnosis(i)">删除</button>
+              </div>
+            } @empty {
+              <p class="muted">尚未录入诊断</p>
+            }
+          </div>
+
+          <div class="actions">
+            <button mat-stroked-button type="button" (click)="store.saveDiagnoses()" [disabled]="store.saving()">
+              保存诊断
+            </button>
+            <button mat-button type="button" (click)="store.saveNow()" [disabled]="store.saving()">
+              保存病历
+            </button>
+            <button mat-button type="button" (click)="openCancel()">取消就诊</button>
+            <button
+              *appHasPermission="'encounter:finish'"
+              mat-flat-button
+              type="button"
+              class="finish"
+              (click)="store.finish()"
+              [disabled]="store.saving() || !store.canFinish()"
+            >
+              结束就诊
+            </button>
+          </div>
+          @if (!store.canFinish()) {
+            <p class="finish-hint">结束就诊前需要填写主诉，并保存一条主诊断。</p>
+          }
+        } @else if (detail.encounter.status === 'COMPLETED') {
+          <div class="completed-box">
+            <h3>就诊已完成</h3>
+            <p>病历版本 v{{ detail.emr?.version ?? 0 }} · 诊断 {{ detail.diagnoses.length }} 条</p>
+            <div class="diagnosis-summary">
+              @for (diagnosis of detail.diagnoses; track diagnosis.id) {
+                <span class="chip-mini">{{ diagnosis.diagnosisName }}</span>
+              }
+            </div>
+          </div>
+        }
+      } @else {
+        <p class="empty-hint">从左侧候诊队列选择患者开始接诊</p>
+      }
+    </mat-card>
+  </div>
+</div>

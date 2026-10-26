@@ -43,6 +43,8 @@ public interface AppointmentRepository {
 
     long insertAppointment(NewAppointment appointment);
 
+    long nextScheduleSeq(long scheduleId);
+
     Optional<AppointmentView> findAppointment(long id);
 
     List<AppointmentView> listAppointments(LocalDate date, String status, Long deptId, Long doctorId);
