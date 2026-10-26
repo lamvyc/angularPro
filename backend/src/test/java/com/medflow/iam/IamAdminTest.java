@@ -184,6 +184,10 @@ class IamAdminTest extends AbstractIntegrationTest {
         var filtered = api.get("/api/v1/audit-logs?action=USER_CREATED&size=10", adminToken);
         assertThat(filtered.status()).isEqualTo(200);
         assertThat(filtered.rawBody()).contains("USER_CREATED").doesNotContain("AUTH_LOGIN_SUCCESS");
+
+        var loginAudit = api.get("/api/v1/audit-logs?action=AUTH_LOGIN_SUCCESS&size=10", adminToken);
+        assertThat(loginAudit.status()).isEqualTo(200);
+        assertThat(loginAudit.rawBody()).contains("\"actorName\":\"系统管理员\"");
     }
 
     private String tokenFor(String username, String password) {
