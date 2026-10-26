@@ -106,7 +106,7 @@
           </div>
         }
 
-        @if (detail.encounter.status === 'IN_PROGRESS') {
+        @if (detail.encounter.status === 'IN_PROGRESS' || detail.encounter.status === 'COMPLETED') {
           <div class="emr-head">
             <span class="block-label">
               电子病历 · {{ detail.emr?.templateName ?? '未加载模板' }} · v{{ detail.emr?.version ?? 0 }}
@@ -298,16 +298,18 @@
                   提交修订
                 </button>
               }
-              <button
-                *appHasPermission="'encounter:finish'"
-                mat-flat-button
-                type="button"
-                class="finish"
-                (click)="store.finish()"
-                [disabled]="store.saving() || !store.canFinish()"
-              >
-                结束就诊
-              </button>
+              @if (detail.encounter.status === 'IN_PROGRESS') {
+                <button
+                  *appHasPermission="'encounter:finish'"
+                  mat-flat-button
+                  type="button"
+                  class="finish"
+                  (click)="store.finish()"
+                  [disabled]="store.saving() || !store.canFinish()"
+                >
+                  结束就诊
+                </button>
+              }
             }
           </div>
           @if (!store.signed()) {
@@ -315,16 +317,6 @@
           } @else if (!store.canFinish() && !store.amending()) {
             <p class="finish-hint">结束就诊前需要保存一条主诊断。</p>
           }
-        } @else if (detail.encounter.status === 'COMPLETED') {
-          <div class="completed-box">
-            <h3>就诊已完成</h3>
-            <p>病历版本 v{{ detail.emr?.version ?? 0 }} · 诊断 {{ detail.diagnoses.length }} 条</p>
-            <div class="diagnosis-summary">
-              @for (diagnosis of detail.diagnoses; track diagnosis.id) {
-                <span class="chip-mini">{{ diagnosis.diagnosisName }}</span>
-              }
-            </div>
-          </div>
         }
       } @else {
         <p class="empty-hint">从左侧候诊队列选择患者开始接诊</p>
