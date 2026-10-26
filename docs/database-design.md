@@ -477,8 +477,8 @@ CONSTRAINT chk_batch_qty CHECK (stock_qty >= 0 AND reserved_qty >= 0 AND reserve
 | V1 | `V1__infrastructure.sql` | `sys_audit_log`、`sys_idempotency_record`、`sys_sequence`、`outbox_event` | P0（本阶段） |
 | V2 | `V2__iam.sql` | 科室/用户/角色/权限/关联表 + 内置角色与管理员账号 | M1 |
 | V3 | `V3__iam_menu_adjust.sql` | 科室管理调整为一级只读菜单 | M1 |
-| V4 | `V4__patient_appointment.sql` | 患者、排班、号源、预约、收费、退款 | M2 |
-| V5 | `V5__encounter.sql` | 就诊、诊断、就诊事件 | M3 |
+| V4 | `V4__patient_appointment.sql` | 患者、排班、号源、预约、收费、退款、encounter 基础表 + 预约/排班菜单 | M2 |
+| V5 | `V5__encounter_detail.sql` | 诊断、就诊事件（encounter 已在 V4） | M3 |
 | V6 | `V6__emr.sql` | 模板、模板版本、病历、病历版本 + 演示模板 | M4 |
 | V7 | `V7__prescription.sql` | 处方、明细、修订、审核、事件 | M5 |
 | V8 | `V8__pharmacy.sql` | 药品、批次、预占、流水 + 演示药品 | M6 |
@@ -497,9 +497,9 @@ CONSTRAINT chk_batch_qty CHECK (stock_qty >= 0 AND reserved_qty >= 0 AND reserve
 | --- | --- | --- |
 | 科室 | 3 | 皮肤科、全科、药房 |
 | 角色 | 5 | 五个内置角色，权限按矩阵分配 |
-| 用户 | 7 | 管理员 1 + 医生 2 + 护士 1 + 药师 1 + 收费员 1 + 停用示例 1 |
-| 患者 | 12 | 合成姓名、手机号、证件号（掩码展示） |
-| 排班/号源 | 未来 7 天 × 2 医生 × 2 半天 | 上午 20 个号源，下午 15 个 |
+| 用户 | 8 | 管理员 1 + 医生 2 + 护士 2 + 药师 1 + 收费员 1 + 停用示例 1 |
+| 患者 | 演示时建档 | 合成姓名、手机号、证件号（掩码展示） |
+| 排班/号源 | 演示时创建 | 医生发布排班后按时间段生成号源 |
 | 病历模板 | 2 | 皮肤科初诊、全科复诊，含条件字段 |
 | 药品/批次 | 20 / 40 | 含 1 个临期批次、1 个库存不足药品用于演示 |
 | 历史预约/就诊 | 20 | 覆盖各状态，含取消、过号、完成 |

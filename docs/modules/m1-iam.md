@@ -29,6 +29,7 @@
 | `pharmacist1` | 赵磊 | 药房 | PHARMACIST | ALL |
 | `cashier1` | 陈晨 | 全科医学科 | CASHIER | DEPT |
 | `nurse2` | 孙悦 | 皮肤科 | NURSE | DEPT（已停用，用于测试） |
+| `nurse3` | 刘敏 | 全科医学科 | NURSE | DEPT（M2 跨科室签到演示） |
 
 > 账号数据来自 `V2__iam.sql`，全部为合成数据。
 

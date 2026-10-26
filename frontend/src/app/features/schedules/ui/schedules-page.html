@@ -1,0 +1,154 @@
+<div class="mf-page">
+  <header class="admin-head">
+    <div>
+      <span class="mf-eyebrow">医生 · 排班</span>
+      <h1>排班与号源</h1>
+      <p>排班发布即生成号源；同一医生同一天同一时段只能有一个活动排班。</p>
+    </div>
+    <div class="admin-actions">
+      <button mat-stroked-button type="button" (click)="load()">
+        <app-icon name="refresh" [size]="15" />刷新
+      </button>
+    </div>
+  </header>
+
+  @if (message(); as message) {
+    <div class="notice notice-success" role="status">
+      <app-icon name="check" [size]="16" />{{ message }}
+      <button mat-button type="button" (click)="clearNotice()">知道了</button>
+    </div>
+  }
+  @if (error(); as error) {
+    <div class="notice notice-error" role="alert">
+      <app-icon name="alert" [size]="16" />{{ error.message }} <code>{{ error.code }}</code>
+      <button mat-button type="button" (click)="clearNotice()">关闭</button>
+    </div>
+  }
+
+  @if (auth.hasPermission('schedule:manage')) {
+    <mat-card appearance="outlined" class="admin-card create-card">
+      @if (actionBusy()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+      <mat-card-header>
+        <div mat-card-avatar class="card-icon"><app-icon name="calendar" [size]="19" /></div>
+        <mat-card-title>发布新排班</mat-card-title>
+        <mat-card-subtitle
+          >号源按时间段平均生成，每个号源默认容量 {{ model().capacityPerSlot }}</mat-card-subtitle
+        >
+      </mat-card-header>
+      <mat-card-content>
+        <form class="schedule-form">
+          <mat-form-field appearance="outline">
+            <mat-label>日期</mat-label>
+            <input matInput type="date" [formField]="editor.scheduleDate" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>时段</mat-label>
+            <select matNativeControl [formField]="editor.period">
+              <option value="AM">上午</option>
+              <option value="PM">下午</option>
+            </select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>开始</mat-label>
+            <input matInput type="time" [formField]="editor.startTime" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>结束</mat-label>
+            <input matInput type="time" [formField]="editor.endTime" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>诊室</mat-label>
+            <input matInput [formField]="editor.room" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>号源数</mat-label>
+            <input matInput type="number" [formField]="editor.slotCount" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>每个号源容量</mat-label>
+            <input matInput type="number" [formField]="editor.capacityPerSlot" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>挂号费</mat-label>
+            <input matInput type="number" [formField]="editor.registrationFee" />
+          </mat-form-field>
+        </form>
+        <button
+          mat-flat-button
+          class="publish"
+          type="button"
+          (click)="create()"
+          [disabled]="actionBusy()"
+        >
+          发布排班
+        </button>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <mat-card appearance="outlined" class="admin-card">
+    <div class="admin-toolbar">
+      <input type="date" [value]="date()" (change)="setDate($event)" />
+      <span class="spacer"></span>
+      <span class="muted">共 {{ schedules().length }} 个排班</span>
+    </div>
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>医生 / 科室</th>
+          <th>日期</th>
+          <th>时段</th>
+          <th>诊室</th>
+          <th>余号 / 费用</th>
+          <th>状态</th>
+          <th class="row-actions">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (schedule of schedules(); track schedule.id) {
+          <tr>
+            <td>
+              <div class="cell-main">
+                <strong>{{ schedule.doctorName }}</strong>
+                <small>{{ schedule.deptName }}</small>
+              </div>
+            </td>
+            <td>{{ schedule.scheduleDate }}</td>
+            <td>
+              {{ schedule.period === 'AM' ? '上午' : '下午' }} ·
+              {{ schedule.startTime.slice(0, 5) }}–{{ schedule.endTime.slice(0, 5) }}
+            </td>
+            <td>{{ schedule.room ?? '—' }}</td>
+            <td>
+              <div class="cell-main">
+                <span>余 {{ schedule.availableCount }}</span>
+                <small>¥{{ schedule.registrationFee }}</small>
+              </div>
+            </td>
+            <td>
+              <span [class]="schedule.status === 'PUBLISHED' ? 'tag tag-success' : 'tag'">
+                {{ schedule.status === 'PUBLISHED' ? '开放' : '已关闭' }}
+              </span>
+            </td>
+            <td>
+              <div class="row-actions">
+                @if (canClose(schedule)) {
+                  <button mat-button type="button" (click)="close(schedule)">关闭</button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty-row">该日期暂无排班</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </mat-card>
+</div>

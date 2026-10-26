@@ -32,7 +32,11 @@ public final class ApiTestClient {
     }
 
     public Response post(String path, Object body, String token) {
-        return send("POST", path, body, token);
+        return post(path, body, token, Map.of());
+    }
+
+    public Response post(String path, Object body, String token, Map<String, String> headers) {
+        return send("POST", path, body, token, headers);
     }
 
     public Response put(String path, Object body, String token) {
@@ -48,10 +52,16 @@ public final class ApiTestClient {
     }
 
     public Response send(String method, String path, Object body, String token) {
+        return send(method, path, body, token, Map.of());
+    }
+
+    public Response send(String method, String path, Object body, String token,
+            Map<String, String> headers) {
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(baseUrl + path))
                     .timeout(Duration.ofSeconds(15))
                     .header("Accept", "application/json");
+            headers.forEach(builder::header);
             if (token != null) {
                 builder.header("Authorization", "Bearer " + token);
             }

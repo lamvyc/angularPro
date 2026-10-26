@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+
+.create-card {
+  margin-bottom: 18px;
+}
+
+.card-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--mf-primary-soft);
+  color: var(--mf-primary);
+}
+
+.schedule-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 4px 12px;
+}
+
+.publish {
+  margin-top: 6px;
+  border-radius: 999px !important;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 9px 12px;
+  border-radius: var(--mf-radius-sm);
+  font-size: 12px;
+}
+
+.notice button {
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.notice-success {
+  background: var(--mf-success-soft);
+  color: var(--mf-success);
+}
+
+.notice-error {
+  background: var(--mf-danger-soft);
+  color: var(--mf-danger);
+}
+
+.muted {
+  color: var(--mf-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 1000px) {
+  .schedule-form {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}

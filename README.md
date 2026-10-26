@@ -10,13 +10,13 @@
 | --- | --- | --- |
 | P0 | 需求 / 架构 / 数据库 / 流程 / 计划 + 前后端基础工程 + Compose + CI | ✅ 已完成 |
 | M1 | 登录、角色权限、菜单/按钮/接口权限、科室数据隔离、审计 | ✅ 已完成 |
-| M2 | 排班号源、并发预约、签到、退号退费 | 下一阶段 |
-| M3 | 候诊队列、接诊状态机、草稿自动保存、乐观锁冲突 | 计划中 |
+| M2 | 排班号源、并发预约、签到、退号退费 | ✅ 已完成 |
+| M3 | 候诊队列、接诊状态机、草稿自动保存、乐观锁冲突 | 下一阶段 |
 | M4 | 结构化病历模板、动态表单、签署、修订与历史版本 | 计划中 |
 | M5 | 开方、审方、驳回重提、幂等提交、状态机 | 计划中 |
 | M6 | 批次库存、FEFO 预占、发药退药、补偿与对账 | 计划中 |
 
-设计文档： [需求](docs/requirements.md) · [架构](docs/architecture.md) · [数据库](docs/database-design.md) · [业务流程](docs/business-flows.md) · [开发计划](docs/development-plan.md) · [M1 实现说明](docs/modules/m1-iam.md)
+设计文档： [需求](docs/requirements.md) · [架构](docs/architecture.md) · [数据库](docs/database-design.md) · [业务流程](docs/business-flows.md) · [开发计划](docs/development-plan.md) · [M1 实现说明](docs/modules/m1-iam.md) · [M2 实现说明](docs/modules/m2-appointment.md)
 
 ## 技术栈（已锁定版本）
 
@@ -87,8 +87,9 @@ pnpm web:start
 | `nurse1` | 护士 | 皮肤科 | DEPT |
 | `pharmacist1` | 药师 | 药房 | ALL |
 | `cashier1` | 收费员 | 全科医学科 | DEPT |
+| `nurse3` | 护士 | 全科医学科 | DEPT |
 
-不同角色登录后菜单不同：医生只有工作台、科室人员与只读科室管理；管理员拥有用户、角色、科室与审计后台。
+不同角色登录后菜单不同：医生/护士/收费员有预约挂号与排班管理；医生可发布排班、收费员可预约收费、护士可签到；管理员拥有用户、角色、科室与审计后台。
 
 ### 4. 测试与构建
 
@@ -170,13 +171,16 @@ cd backend && ./mvnw verify
 | 项目 | 命令 / 方式 | 结果 |
 | --- | --- | --- |
 | 前端静态检查 | `pnpm --filter medflow-web lint` | 0 error |
-| 前端单元测试 | `pnpm --filter medflow-web test` | 16 个文件 / 32 个用例通过 |
+| 前端单元测试 | `pnpm --filter medflow-web test` | 18 个文件 / 35 个用例通过 |
 | 前端生产构建 | `pnpm --filter medflow-web build` | 成功，初始包 ≈ 315 kB（未压缩） |
-| 后端单元 + 架构 + 集成测试 | `cd backend && ./mvnw verify` | 36 个用例通过（Testcontainers 真实 MySQL/Redis） |
+| 后端单元 + 架构 + 集成测试 | `cd backend && ./mvnw verify` | 42 个用例通过（Testcontainers 真实 MySQL/Redis） |
 | 本地依赖健康 | `docker compose ps` | MySQL / Redis 均 healthy |
 | 后端运行 | `GET /actuator/health` | `UP`，db/redis 均 `UP` |
 | 未登录访问 | `GET /api/v1/system/info` | `401` + `application/problem+json`（`MED-AUTH-001`） |
-| 角色菜单 | 医生 `/api/v1/auth/me` | 工作台 / 科室人员 / 科室管理；无用户/角色/审计菜单 |
+| 角色菜单 | 医生 `/api/v1/auth/me` | 工作台 / 科室人员 / 科室管理 / 预约挂号 / 排班管理 |
+| 并发预约 | 50 线程抢 1 个号源 | 恰好 1 个 201，`booked_count=1`，无超卖 |
+| 退号退款 | 收费后取消预约 | 号源释放，退款记录 SUCCESS，账单 REFUNDED |
+| 签到 | 当日预约签到 | `CHECKED_IN`，创建 `encounter(WAITING)` |
 | 数据范围 | 医生 `/api/v1/staff/doctors` | 仅返回皮肤科张明；跨科室参数 403 |
 | 越权审计 | 医生访问 `/api/v1/users` 后查审计 | `403`，审计出现 `ACCESS_DENIED` |
 | API 文档 | `GET /v3/api-docs` | `200` |

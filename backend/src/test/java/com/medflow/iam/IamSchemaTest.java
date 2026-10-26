@@ -83,6 +83,6 @@ class IamSchemaTest extends AbstractIntegrationTest {
                 """, Integer.class);
 
         assertThat(columns).isEqualTo(2);
-        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys_user", Integer.class)).isEqualTo(7);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys_user", Integer.class)).isEqualTo(8);
     }
 }

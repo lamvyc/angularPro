@@ -34,6 +34,24 @@ export const routes: Routes = [
           import('./features/staff/ui/staff-page').then((module) => module.StaffPage),
       },
       {
+        path: 'appointments',
+        title: '预约挂号 · MedFlow',
+        canActivate: [permissionGuard],
+        data: { permission: 'appointment:read' },
+        loadComponent: () =>
+          import('./features/appointments/ui/appointments-page').then(
+            (module) => module.AppointmentsPage,
+          ),
+      },
+      {
+        path: 'schedules',
+        title: '排班管理 · MedFlow',
+        canActivate: [permissionGuard],
+        data: { permission: 'schedule:read' },
+        loadComponent: () =>
+          import('./features/schedules/ui/schedules-page').then((module) => module.SchedulesPage),
+      },
+      {
         path: 'admin/users',
         title: '用户管理 · MedFlow',
         canActivate: [permissionGuard],

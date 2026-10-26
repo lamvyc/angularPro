@@ -1,0 +1,269 @@
+<div class="mf-page">
+  <header class="admin-head">
+    <div>
+      <span class="mf-eyebrow">门诊 · 预约</span>
+      <h1>预约挂号</h1>
+      <p>号源由后端原子扣减；重复提交使用 Idempotency-Key 回放，同一患者同一号源不可重复预约。</p>
+    </div>
+    <div class="admin-actions">
+      <button mat-stroked-button type="button" (click)="store.loadAppointments()">
+        <app-icon name="refresh" [size]="15" />刷新列表
+      </button>
+    </div>
+  </header>
+
+  @if (store.message(); as message) {
+    <div class="notice notice-success" role="status">
+      <app-icon name="check" [size]="16" />
+      {{ message }}
+      <button mat-button type="button" (click)="store.clearNotice()">知道了</button>
+    </div>
+  }
+  @if (store.error(); as error) {
+    <div class="notice notice-error" role="alert">
+      <app-icon name="alert" [size]="16" />
+      {{ error.message }} <code>{{ error.code }}</code>
+      <button mat-button type="button" (click)="store.clearNotice()">关闭</button>
+    </div>
+  }
+
+  <div class="appointment-grid" [class.without-booking]="!auth.hasPermission('appointment:create')">
+    @if (auth.hasPermission('appointment:create')) {
+      <mat-card appearance="outlined" class="admin-card booking-card">
+        @if (store.actionBusy()) {
+          <mat-progress-bar mode="indeterminate" />
+        }
+        <mat-card-header>
+          <div mat-card-avatar class="card-icon"><app-icon name="calendar" [size]="19" /></div>
+          <mat-card-title>选择号源</mat-card-title>
+          <mat-card-subtitle>按日期选择医生排班与剩余号源</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="date-row">
+            <label for="booking-date">就诊日期</label>
+            <input
+              id="booking-date"
+              type="date"
+              [value]="store.bookingDate()"
+              (change)="setBookingDate($event)"
+            />
+          </div>
+
+          @if (store.loadingSchedules()) {
+            <p class="muted">正在加载排班…</p>
+          } @else {
+            <div class="schedule-list">
+              @for (schedule of store.schedules(); track schedule.id) {
+                <button
+                  type="button"
+                  class="schedule-item"
+                  [class.selected]="store.selectedScheduleId() === schedule.id"
+                  (click)="selectSchedule(schedule)"
+                >
+                  <span class="schedule-main">
+                    <strong>{{ schedule.doctorName }}</strong>
+                    <small
+                      >{{ schedule.deptName }} ·
+                      {{ schedule.period === 'AM' ? '上午' : '下午' }}</small
+                    >
+                  </span>
+                  <span class="schedule-meta">
+                    {{ schedule.startTime.slice(0, 5) }}–{{ schedule.endTime.slice(0, 5) }}
+                    <em [class.is-empty]="schedule.availableCount === 0">
+                      余 {{ schedule.availableCount }}
+                    </em>
+                  </span>
+                </button>
+              } @empty {
+                <p class="empty-hint">该日期暂无排班，请让医生先创建排班。</p>
+              }
+            </div>
+          }
+
+          @if (store.selectedSchedule(); as schedule) {
+            <div class="slot-block">
+              <span class="block-label">号源</span>
+              @if (store.loadingSlots()) {
+                <p class="muted">加载号源…</p>
+              } @else {
+                <div class="slot-list">
+                  @for (slot of store.slots(); track slot.id) {
+                    <button
+                      type="button"
+                      class="slot-chip"
+                      [class.selected]="store.selectedSlotId() === slot.id"
+                      [class.disabled]="slot.available === 0"
+                      (click)="selectSlot(slot)"
+                    >
+                      {{ slot.startTime.slice(0, 5) }}
+                      <small>{{ slot.available }}/{{ slot.capacity }}</small>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <div class="patient-block">
+            <span class="block-label">患者</span>
+            <div class="search-row">
+              <input
+                placeholder="姓名 / 手机号 / 患者编号"
+                [value]="store.patientKeyword()"
+                (input)="onPatientKeyword($event)"
+                (keydown.enter)="store.searchPatients()"
+              />
+              <button mat-button type="button" (click)="store.searchPatients()">搜索</button>
+              <button
+                *appHasPermission="'patient:create'"
+                mat-stroked-button
+                type="button"
+                (click)="openPatientDialog()"
+              >
+                快速建档
+              </button>
+            </div>
+            @if (store.loadingPatients()) {
+              <p class="muted">搜索中…</p>
+            } @else if (store.patients().length > 0) {
+              <div class="patient-list">
+                @for (patient of store.patients(); track patient.id) {
+                  <button
+                    type="button"
+                    class="patient-item"
+                    [class.selected]="store.selectedPatientId() === patient.id"
+                    (click)="selectPatient(patient)"
+                  >
+                    <strong>{{ patient.name }}</strong>
+                    <small>{{ patient.patientNo }} · {{ patient.phone ?? '无手机号' }}</small>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <button
+            mat-flat-button
+            class="book-button"
+            type="button"
+            [disabled]="!store.canSubmit() || store.actionBusy()"
+            (click)="store.book()"
+          >
+            确认预约
+            @if (store.selectedPatient(); as patient) {
+              · {{ patient.name }}
+            }
+          </button>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <mat-card appearance="outlined" class="admin-card list-card">
+      <div class="admin-toolbar">
+        <input type="date" [value]="store.listDate()" (change)="setListDate($event)" />
+        <select (change)="setStatus($event)">
+          <option value="">全部状态</option>
+          <option value="BOOKED">已预约</option>
+          <option value="CHECKED_IN">已签到</option>
+          <option value="CANCELLED">已取消</option>
+          <option value="NO_SHOW">过号</option>
+        </select>
+        <button mat-button type="button" (click)="store.loadAppointments()">查询</button>
+        <span class="spacer"></span>
+        <span class="muted">共 {{ store.appointments().length }} 条</span>
+      </div>
+
+      @if (store.loadingAppointments()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>患者 / 预约号</th>
+            <th>科室 / 医生</th>
+            <th>时间</th>
+            <th>状态</th>
+            <th>费用</th>
+            <th class="row-actions">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (appointment of store.appointments(); track appointment.id) {
+            <tr>
+              <td>
+                <div class="cell-main">
+                  <strong>{{ appointment.patientName }}</strong>
+                  <small class="mf-mono">{{ appointment.appointmentNo }}</small>
+                </div>
+              </td>
+              <td>
+                <div class="cell-main">
+                  <span>{{ appointment.deptName }}</span>
+                  <small>{{ appointment.doctorName }}</small>
+                </div>
+              </td>
+              <td>
+                <div class="cell-main">
+                  <span
+                    >{{ appointment.period === 'AM' ? '上午' : '下午' }} ·
+                    {{ appointment.seqNo }} 号</span
+                  >
+                  <small>{{ appointment.appointmentDate }}</small>
+                </div>
+              </td>
+              <td>
+                <span [class]="statusClass(appointment.status)">{{
+                  statusLabel(appointment.status)
+                }}</span>
+              </td>
+              <td>
+                <div class="cell-main">
+                  <span>¥{{ appointment.chargeAmount ?? '—' }}</span>
+                  <small>{{ chargeLabel(appointment.chargeStatus) }}</small>
+                </div>
+              </td>
+              <td>
+                <div class="row-actions">
+                  @if (appointment.status === 'BOOKED') {
+                    <button
+                      *appHasPermission="'appointment:checkin'"
+                      mat-button
+                      type="button"
+                      (click)="store.checkIn(appointment)"
+                    >
+                      签到
+                    </button>
+                  }
+                  @if (appointment.chargeStatus === 'UNPAID') {
+                    <button
+                      *appHasPermission="'charge:collect'"
+                      mat-button
+                      type="button"
+                      (click)="store.pay(appointment)"
+                    >
+                      收费
+                    </button>
+                  }
+                  @if (appointment.status === 'BOOKED') {
+                    <button
+                      *appHasPermission="'appointment:cancel'"
+                      mat-button
+                      type="button"
+                      (click)="openCancelDialog(appointment)"
+                    >
+                      退号
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty-row">当日暂无预约</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </mat-card>
+  </div>
+</div>
