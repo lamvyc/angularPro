@@ -1,0 +1,19 @@
+{
+  "name": "medflow",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "scripts": {
+    "web:start": "pnpm --filter medflow-web start",
+    "web:build": "pnpm --filter medflow-web build",
+    "web:test": "pnpm --filter medflow-web test",
+    "web:lint": "pnpm --filter medflow-web lint",
+    "api:test": "cd backend && ./mvnw test",
+    "api:run": "cd backend && ./mvnw spring-boot:run",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.yml down"
+  }
+}

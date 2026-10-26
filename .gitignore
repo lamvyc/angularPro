@@ -1,0 +1,34 @@
+# ---- Node / Angular ----
+node_modules/
+dist/
+.angular/
+coverage/
+*.tsbuildinfo
+.pnpm-store/
+
+# ---- Java / Maven ----
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# ---- IDE / OS ----
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+*.iml
+
+# ---- Env / local ----
+.env
+.env.local
+*.local.yml
+logs/
+infra/data/
+
+# ---- Sandbox / tooling workarounds ----
+.m2repo/
+.colima-home/
+.lima-home/
