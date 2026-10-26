@@ -189,12 +189,12 @@ export class UserEditorDialog {
   });
 
   protected readonly editor = form(this.model, (path) => {
-    required(path.username, { message: '请输入用户名' });
     required(path.realName, { message: '请输入姓名' });
     required(path.deptId, { message: '请选择科室' });
     if (this.data.user) {
       disabled(path.username);
     } else {
+      required(path.username, { message: '请输入用户名' });
       required(path.password, { message: '请输入初始密码' });
       minLength(path.password, 8, { message: '密码至少 8 位' });
     }

@@ -14,7 +14,6 @@ import { RouterLink } from '@angular/router';
         <p>当前角色无权访问此页面。若你需要该权限，请联系系统管理员在角色授权中开启。</p>
         <div class="actions">
           <a mat-flat-button routerLink="/dashboard">返回工作台</a>
-          <a mat-button routerLink="/staff">查看科室人员</a>
         </div>
       </div>
     </div>

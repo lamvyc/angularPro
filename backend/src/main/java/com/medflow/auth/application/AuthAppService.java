@@ -82,7 +82,8 @@ public class AuthAppService {
         IssuedRefreshToken refreshToken = refreshTokenStore.issue(user.id(), UUID.randomUUID().toString());
         IssuedAccessToken accessToken = jwtService.issue(
                 user.id(), user.username(), user.deptId(), RoleInfo.codes(snapshot.roles()));
-        auditService.success("AUTH_LOGIN_SUCCESS", "USER", user.username(), null,
+        auditService.successFor(user.id(), user.realName(), "AUTH_LOGIN_SUCCESS", "USER",
+                user.username(), null,
                 Map.of("deptName", user.deptName(), "roles", RoleInfo.codes(snapshot.roles())));
         return new LoginResult(accessToken, refreshToken.value(), toProfile(snapshot));
     }

@@ -176,7 +176,8 @@ class IamAdminTest extends AbstractIntegrationTest {
         var response = api.get("/api/v1/audit-logs?size=100", adminToken);
         assertThat(response.status()).isEqualTo(200);
         String body = response.rawBody();
-        assertThat(body).contains("AUTH_LOGIN_SUCCESS", "USER_CREATED", "DEPARTMENT_CREATED", "ROLE_CREATED");
+        assertThat(body).contains("AUTH_LOGIN_SUCCESS", "USER_CREATED", "DEPARTMENT_CREATED", "ROLE_CREATED")
+                .contains("系统管理员");
         assertThat(body).doesNotContain("Medflow@2026").doesNotContain("accessToken")
                 .doesNotContain("refreshToken");
 

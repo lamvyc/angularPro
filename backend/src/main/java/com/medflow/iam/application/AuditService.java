@@ -34,6 +34,14 @@ public class AuditService {
     }
 
     /**
+     * 登录成功时请求尚未建立 SecurityContext，需要显式传入操作人。
+     */
+    public void successFor(Long actorId, String actorName, String action, String resourceType,
+            String resourceId, Map<String, Object> before, Map<String, Object> after) {
+        record(action, resourceType, resourceId, "SUCCESS", null, before, after, actorId, actorName);
+    }
+
+    /**
      * 失败审计必须独立提交：调用方随后抛出的业务异常会回滚外层事务。
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
