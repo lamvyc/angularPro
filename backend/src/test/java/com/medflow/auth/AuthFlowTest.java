@@ -69,8 +69,8 @@ class AuthFlowTest extends AbstractIntegrationTest {
                 .contains("schedule:read", "encounter:read")
                 .doesNotContain("system:user:read");
         assertThat(menuCodes(user.path("menus")))
-                .contains("menu:dashboard", "menu:staff")
-                .doesNotContain("menu:system");
+                .contains("menu:dashboard", "menu:staff", "system:dept:read")
+                .doesNotContain("system:user:read", "system:role:read", "system:audit:read");
     }
 
     @Test

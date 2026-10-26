@@ -21,6 +21,7 @@ public enum ErrorCode {
     IDEMPOTENT_IN_PROGRESS(HttpStatus.CONFLICT, "MED-IDEM-001", "请求处理中", "相同请求正在处理，请稍后重试"),
     EXPIRED(HttpStatus.GONE, "MED-EXPIRED-001", "已过期", "号源或处方已过期"),
     CONFLICT(HttpStatus.CONFLICT, "MED-CONFLICT-001", "数据冲突", "数据冲突，请检查后重试"),
+    IAM_PROTECTED(HttpStatus.CONFLICT, "MED-IAM-001", "受保护的数据", "内置角色或当前账号不允许该操作"),
     VALIDATION_FAILED(HttpStatus.UNPROCESSABLE_CONTENT, "MED-VALID-001", "参数校验失败", "请求参数不合法"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "MED-METHOD-001", "方法不支持", "请求方法不被支持"),
     INTERNAL(HttpStatus.INTERNAL_SERVER_ERROR, "MED-INTERNAL", "系统错误", "系统繁忙，请稍后重试");
