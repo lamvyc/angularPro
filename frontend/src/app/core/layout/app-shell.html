@@ -1,0 +1,98 @@
+<mat-sidenav-container class="shell" autosize>
+  <mat-sidenav
+    class="sidenav"
+    [mode]="sidenavMode()"
+    [opened]="opened()"
+    (openedChange)="opened.set($event)"
+  >
+    <a class="brand" routerLink="/dashboard" (click)="closeOnNavigate()">
+      <span class="brand-mark"><app-icon name="pulse" [size]="22" /></span>
+      <span class="brand-copy">
+        <strong>MedFlow</strong>
+        <small>门诊诊疗平台</small>
+      </span>
+    </a>
+
+    <mat-divider />
+
+    <nav class="nav" aria-label="主导航">
+      @for (section of navSections; track section.title) {
+        <div class="nav-section">
+          <p class="nav-title">{{ section.title }}</p>
+          @for (item of section.items; track item.label) {
+            @if (item.disabled) {
+              <div class="nav-item is-disabled" aria-disabled="true">
+                <app-icon [name]="item.icon" [size]="18" />
+                <span class="label">{{ item.label }}</span>
+                <span class="badge">{{ item.badge }}</span>
+              </div>
+            } @else {
+              <a
+                class="nav-item"
+                [routerLink]="item.route"
+                routerLinkActive="is-active"
+                [routerLinkActiveOptions]="{ exact: true }"
+                (click)="closeOnNavigate()"
+              >
+                <app-icon [name]="item.icon" [size]="18" />
+                <span class="label">{{ item.label }}</span>
+                @if (item.badge) {
+                  <span class="badge">{{ item.badge }}</span>
+                }
+              </a>
+            }
+          }
+        </div>
+      }
+    </nav>
+
+    <div class="sidenav-foot">
+      <span class="version">v0.1.0 · P0</span>
+      <span class="foot-note">全部数据为合成演示数据</span>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <div class="content-area">
+      <header class="topbar">
+        <button mat-icon-button class="menu-button" (click)="toggleSidenav()" aria-label="切换导航">
+          <app-icon name="menu" [size]="22" />
+        </button>
+
+        <div class="titles">
+          <span class="crumb">MedFlow / 演示环境</span>
+          <strong>门诊诊疗管理平台</strong>
+        </div>
+
+        <div class="actions">
+          <span class="demo-badge">合成数据</span>
+          <span
+            class="status-pill"
+            [class]="'status-' + store.apiState()"
+            role="status"
+            aria-live="polite"
+          >
+            <span class="dot"></span>
+            <span class="status-text">{{ statusLabel() }}</span>
+          </span>
+          <div class="user">
+            <span class="avatar">M</span>
+            <span class="user-copy">
+              <strong>未登录</strong>
+              <small>M1 接入鉴权</small>
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <main class="main">
+        <router-outlet />
+      </main>
+
+      <footer class="footer">
+        <span>MedFlow · P0 基础工程 · Angular 22 + Spring Boot 4</span>
+        <span>不包含真实患者信息</span>
+      </footer>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

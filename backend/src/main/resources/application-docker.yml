@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+
+logging:
+  level:
+    com.medflow: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: never

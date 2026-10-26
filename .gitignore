@@ -32,3 +32,6 @@ infra/data/
 .m2repo/
 .colima-home/
 .lima-home/
+.mvn-home/
+.cache/
+.pnpm-store/

@@ -1,0 +1,14 @@
+spring:
+  flyway:
+    clean-disabled: false
+
+logging:
+  level:
+    com.medflow: INFO
+    org.testcontainers: INFO
+    com.zaxxer.hikari: WARN
+
+management:
+  endpoint:
+    health:
+      show-details: always

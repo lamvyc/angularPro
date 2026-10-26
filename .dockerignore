@@ -1,0 +1,13 @@
+.git
+.github
+**/node_modules
+**/dist
+**/.angular
+**/target
+**/coverage
+.m2repo
+.colima-home
+.lima-home
+.pnpm-store
+.cache
+docs

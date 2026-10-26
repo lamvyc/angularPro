@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+
+logging:
+  level:
+    com.medflow: DEBUG
+    org.flywaydb: INFO
+
+management:
+  endpoint:
+    health:
+      # 本地开发展示 db/redis 详情，便于工作台状态卡调试；生产/演示环境默认不展示。
+      show-details: always
