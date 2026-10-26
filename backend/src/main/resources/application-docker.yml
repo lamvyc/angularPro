@@ -10,4 +10,5 @@ logging:
 management:
   endpoint:
     health:
-      show-details: never
+      # 演示用 Compose 环境展示依赖详情；生产环境应改为 never。
+      show-details: always
